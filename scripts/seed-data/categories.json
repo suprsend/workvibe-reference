@@ -1,0 +1,65 @@
+{
+  "_comment": "Preference category tree, ported verbatim from the live SuprSend account (verified via GET /v1/{ws}/preference_category/?mode=live — not assumed). Every workflow's `category` field (see workflows.json) must match a category slug defined here, or publishing that workflow fails with a 400 ValidationError ('<category>' not found). Must be seeded BEFORE workflows.",
+
+  "workvibe-uber": [
+    { "root_category": "system", "sections": [] },
+    {
+      "root_category": "transactional",
+      "sections": [
+        {
+          "name": "Your account",
+          "slug": "your-account",
+          "categories": [
+            { "category": "onboarding-and-setup", "name": "Onboarding & Setup", "description": "Welcome steps and account setup for new hires.", "default_preference": "opt_in", "default_opt_in_channels": ["email"], "default_mandatory_channels": null },
+            { "category": "security-alerts", "name": "Security Alerts", "description": "Sign-ins and security-critical notices. Always on.", "default_preference": "cant_unsubscribe", "default_opt_in_channels": ["inbox"], "default_mandatory_channels": ["inbox"] }
+          ]
+        }
+      ]
+    },
+    {
+      "root_category": "promotional",
+      "sections": [
+        {
+          "name": "From the People team",
+          "slug": "from-the-people-team",
+          "categories": [
+            { "category": "surveys-and-feedback", "name": "Surveys & Feedback", "description": "Engagement surveys and feedback requests.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null },
+            { "category": "recognition", "name": "Recognition", "description": "Work anniversaries, shout-outs and celebrations.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null },
+            { "category": "announcements", "name": "Announcements", "description": "Company news and updates.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox"], "default_mandatory_channels": null }
+          ]
+        }
+      ]
+    }
+  ],
+
+  "workvibe-spacex": [
+    { "root_category": "system", "sections": [] },
+    {
+      "root_category": "transactional",
+      "sections": [
+        {
+          "name": "Your account",
+          "slug": "your-account",
+          "categories": [
+            { "category": "onboarding-and-setup", "name": "Onboarding & Setup", "description": "Welcome steps and account setup for new hires.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null },
+            { "category": "security-alerts", "name": "Security Alerts", "description": "Sign-ins and security-critical notices. Always on.", "default_preference": "cant_unsubscribe", "default_opt_in_channels": ["email"], "default_mandatory_channels": ["email"] }
+          ]
+        }
+      ]
+    },
+    {
+      "root_category": "promotional",
+      "sections": [
+        {
+          "name": "From the People team",
+          "slug": "from-the-people-team",
+          "categories": [
+            { "category": "surveys-and-feedback", "name": "Surveys & Feedback", "description": "Engagement surveys and feedback requests.", "default_preference": "opt_in", "default_opt_in_channels": ["email"], "default_mandatory_channels": null },
+            { "category": "recognition", "name": "Recognition", "description": "Work anniversaries, shout-outs and celebrations.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null },
+            { "category": "announcements", "name": "Announcements", "description": "Company news and updates.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null }
+          ]
+        }
+      ]
+    }
+  ]
+}

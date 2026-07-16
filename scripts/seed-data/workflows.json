@@ -1,0 +1,133 @@
+{
+  "_comment": "The 5 canonical workflows, ported verbatim from the live SuprSend account (verified via the Management API — not assumed). trigger_events are UPPERCASE because SuprSend upper-cases event names on ingestion. workvibe-uber and workvibe-spacex share identical structure; only the per-workflow `template` slug differs per workspace.",
+
+  "workvibe-uber": [
+    {
+      "slug": "employee-onboarding",
+      "name": "Employee Onboarding",
+      "description": "Auto-fires when an employee is added: welcome now, benefits nudge after 2 days.",
+      "category": "onboarding-and-setup",
+      "trigger_type": "event",
+      "trigger_events": ["EMPLOYEE_ONBOARDED"],
+      "tree": {
+        "nodes": [
+          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "new-hire-welcome", "success": "seen", "success_is_event": false } },
+          { "node_type": "delay", "name": "Delay", "properties": { "delay_type": "fixed", "value": "2d" } },
+          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "benefits-reminder", "success": "seen", "success_is_event": false } }
+        ]
+      }
+    },
+    {
+      "slug": "sign-in-alert",
+      "name": "Sign-in Alert",
+      "description": "Security alert when a new sign-in is detected.",
+      "category": "security-alerts",
+      "trigger_type": "event",
+      "trigger_events": ["NEW_SIGN_IN"],
+      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "security-sign-in-alert", "success": "seen", "success_is_event": false } }] }
+    },
+    {
+      "slug": "engagement-survey",
+      "name": "Engagement Survey",
+      "description": "Invite to the survey; remind after 3 days if no response.",
+      "category": "surveys-and-feedback",
+      "trigger_type": "api",
+      "tree": {
+        "nodes": [
+          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "engagement-survey-invite", "success": "seen", "success_is_event": false } },
+          {
+            "node_type": "branch_waituntil",
+            "name": "Wait for response",
+            "properties": {},
+            "branches": [
+              { "name": "Responded", "is_default": false, "conditions": [{ "type": "future_event", "event_name": "SURVEY_COMPLETED", "event_conditions": [] }], "nodes": [] },
+              { "name": "No response after 3 days", "is_default": true, "conditions": [{ "type": "delay", "delay_properties": { "delay_type": "fixed", "value": "3d" } }], "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "engagement-survey-reminder", "success": "seen", "success_is_event": false } }] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "slug": "peer-recognition",
+      "name": "Peer Recognition",
+      "description": "Notify an employee when they receive recognition.",
+      "category": "recognition",
+      "trigger_type": "event",
+      "trigger_events": ["RECOGNITION_RECEIVED"],
+      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "work-anniversary-recognition", "success": "seen", "success_is_event": false } }] }
+    },
+    {
+      "slug": "team-update",
+      "name": "Team Update",
+      "description": "Send an update to an individual team member (per-user trigger — see Send-test).",
+      "category": "announcements",
+      "trigger_type": "api",
+      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "all-hands-announcement", "success": "seen", "success_is_event": false } }] }
+    }
+  ],
+
+  "workvibe-spacex": [
+    {
+      "slug": "employee-onboarding",
+      "name": "Employee Onboarding",
+      "description": "Auto-fires when an employee is added: welcome now, benefits nudge after 2 days.",
+      "category": "onboarding-and-setup",
+      "trigger_type": "event",
+      "trigger_events": ["EMPLOYEE_ONBOARDED"],
+      "tree": {
+        "nodes": [
+          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "spacex-engineer-welcome", "success": "seen", "success_is_event": false } },
+          { "node_type": "delay", "name": "Delay", "properties": { "delay_type": "fixed", "value": "2d" } },
+          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "spacex-benefits-reminder", "success": "seen", "success_is_event": false } }
+        ]
+      }
+    },
+    {
+      "slug": "sign-in-alert",
+      "name": "Sign-in Alert",
+      "description": "Security alert when a new sign-in is detected.",
+      "category": "security-alerts",
+      "trigger_type": "event",
+      "trigger_events": ["NEW_SIGN_IN"],
+      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "security-sign-in-alert", "success": "seen", "success_is_event": false } }] }
+    },
+    {
+      "slug": "engagement-survey",
+      "name": "Engagement Survey",
+      "description": "Invite to the survey; remind after 3 days if no response.",
+      "category": "surveys-and-feedback",
+      "trigger_type": "api",
+      "tree": {
+        "nodes": [
+          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "survey-invite", "success": "seen", "success_is_event": false } },
+          {
+            "node_type": "branch_waituntil",
+            "name": "Wait for response",
+            "properties": {},
+            "branches": [
+              { "name": "Responded", "is_default": false, "conditions": [{ "type": "future_event", "event_name": "SURVEY_COMPLETED", "event_conditions": [] }], "nodes": [] },
+              { "name": "No response after 3 days", "is_default": true, "conditions": [{ "type": "delay", "delay_properties": { "delay_type": "fixed", "value": "3d" } }], "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "survey-reminder-1", "success": "seen", "success_is_event": false } }] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "slug": "peer-recognition",
+      "name": "Peer Recognition",
+      "description": "Notify an employee when they receive recognition.",
+      "category": "recognition",
+      "trigger_type": "event",
+      "trigger_events": ["RECOGNITION_RECEIVED"],
+      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "work-anniversary-recognition", "success": "seen", "success_is_event": false } }] }
+    },
+    {
+      "slug": "team-update",
+      "name": "Team Update",
+      "description": "Send an update to an individual team member (per-user trigger — see Send-test).",
+      "category": "announcements",
+      "trigger_type": "api",
+      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "company-announcement", "success": "seen", "success_is_event": false } }] }
+    }
+  ]
+}
