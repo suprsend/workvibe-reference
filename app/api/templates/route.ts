@@ -11,11 +11,18 @@ import { generatedToDraft, type GeneratedTemplate } from "@/lib/templates/draft"
 
 const toDraft = generatedToDraft;
 
+// Slugs are interpolated into management API URL paths, so restrict them to the
+// shape the API itself uses — otherwise "../.." walks out of the endpoint.
+const SLUG_RE = /^[a-z0-9-]+$/;
+
 export async function GET(req: Request) {
   try {
     const ws = await getActiveWorkspace();
     const slug = new URL(req.url).searchParams.get("slug");
     if (slug) {
+      if (!SLUG_RE.test(slug)) {
+        return NextResponse.json({ ok: false, error: "Invalid template slug." }, { status: 400 });
+      }
       const template = await getTemplateDraft(ws.slug, slug);
       if (!template) return NextResponse.json({ ok: false, error: "Template not found." }, { status: 404 });
       return NextResponse.json({ ok: true, template });
@@ -36,6 +43,9 @@ export async function POST(req: Request) {
       if (!template?.slug) {
         return NextResponse.json({ ok: false, error: "No template to publish." }, { status: 400 });
       }
+      if (typeof template.slug !== "string" || !SLUG_RE.test(template.slug)) {
+        return NextResponse.json({ ok: false, error: "Invalid template slug." }, { status: 400 });
+      }
       const result = await publishTemplate(ws.slug, toDraft(template as GeneratedTemplate));
       return NextResponse.json({ ok: result.ok, status: result.status, body: result.body });
     }
@@ -51,6 +61,9 @@ export async function DELETE(req: Request) {
     const ws = await getActiveWorkspace();
     const slug = new URL(req.url).searchParams.get("slug");
     if (!slug) return NextResponse.json({ ok: false, error: "slug required" }, { status: 400 });
+    if (!SLUG_RE.test(slug)) {
+      return NextResponse.json({ ok: false, error: "Invalid template slug." }, { status: 400 });
+    }
     const result = await deleteTemplate(ws.slug, slug);
     return NextResponse.json({ ok: result.ok, status: result.status });
   } catch (e) {

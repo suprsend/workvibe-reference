@@ -48,6 +48,15 @@ public/wf-engine.js   Canvas rendering engine
 
 ## Getting started
 
+> **⚠️ Security note — this demo has no authentication.**
+>
+> WorkVibe is meant to run **locally only**. There is no login, and no request is checked against a session, so anyone who can reach the app can act as any employee or admin. **Do not deploy it to the public internet as-is.**
+>
+> Two routes in particular mint SuprSend JWTs for any caller. Before reusing these patterns in production:
+>
+> - **`app/api/subscriber-token/route.ts`** takes `distinct_id` from a query parameter. Derive it from your app's authenticated server-side session instead — never from client input — or a caller can read anyone's notification feed.
+> - **`app/api/editor-token/route.ts`** issues a token scoped to `entity_id: "*"`, i.e. every template in the workspace. Gate this route to admin users, and narrow the scope to specific templates where you can.
+
 ### Prerequisites
 
 - Node.js 20+

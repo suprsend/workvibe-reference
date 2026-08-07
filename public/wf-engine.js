@@ -63,10 +63,27 @@
       el.style.position = "absolute";
       el.style.left = n.gx + "px";
       el.style.top = n.gy + "px";
-      el.innerHTML =
-        '<div class="wf-node-head"><span class="wf-ic">' + wfIcon(n.type) + '</span><span class="wf-title">' + n.title + '</span></div>' +
-        (n.sub ? '<div class="wf-sub" title="' + n.sub + '">' + n.sub + '</div>' : "") +
-        (n.sub2 ? '<div class="wf-sub wf-sub2" title="' + n.sub2 + '">' + n.sub2 + '</div>' : "");
+      // title/sub/sub2 come from workflow JSON, so they are set as text rather than
+      // markup — a workflow named "<img onerror=…>" must render, not execute.
+      const head = document.createElement("div");
+      head.className = "wf-node-head";
+      const ic = document.createElement("span");
+      ic.className = "wf-ic";
+      ic.innerHTML = wfIcon(n.type); // baked SVG from WF_ICONS, keyed by type — not user data
+      const title = document.createElement("span");
+      title.className = "wf-title";
+      title.textContent = n.title;
+      head.appendChild(ic);
+      head.appendChild(title);
+      el.appendChild(head);
+      [n.sub, n.sub2].forEach((text, i) => {
+        if (!text) return;
+        const sub = document.createElement("div");
+        sub.className = i === 0 ? "wf-sub" : "wf-sub wf-sub2";
+        sub.setAttribute("title", text);
+        sub.textContent = text;
+        el.appendChild(sub);
+      });
       grid.appendChild(el);
       map[n.id] = el;
     });

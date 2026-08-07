@@ -23,6 +23,10 @@ export async function GET(req: Request) {
     const now = Math.floor(Date.now() / 1000);
     // scope the subscriber to the tenant whose notifications it should see — the
     // feed is tenant-scoped (our triggers send to tenant_id:"default").
+    //
+    // demo only: distinct_id arrives as a query param, so any caller can mint a
+    // token for any employee. in production derive it from the authenticated
+    // server-side session instead — never from client input.
     const token = jwt.sign(
       { entity_type: "subscriber", entity_id: distinctId, iat: now, exp: now + 60 * 60, scope: { tenant_id: "default" } },
       privateKey,
