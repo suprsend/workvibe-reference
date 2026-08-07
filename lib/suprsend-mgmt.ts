@@ -30,6 +30,17 @@ async function call<T = unknown>(
   return { ok: res.ok, status: res.status, body };
 }
 
+/**
+ * Throw on a non-OK management API response, including the status and body.
+ * Listing endpoints use this so a bad SUPRSEND_SERVICE_TOKEN surfaces as an
+ * error the UI can show, rather than an empty list that reads as "none yet".
+ */
+function assertOk(r: MgmtResult, what: string): void {
+  if (r.ok) return;
+  const detail = typeof r.body === "string" ? r.body : JSON.stringify(r.body);
+  throw new Error(`${what} failed (HTTP ${r.status}): ${detail}`);
+}
+
 // ───────────────────────── Templates (v2) ─────────────────────────
 
 export type TemplateChannel = "email" | "inbox" | "sms" | "whatsapp" | "slack";
@@ -224,7 +235,8 @@ const CHANNEL_CONTENT: Record<TemplateChannel, (d: TemplateDraft) => object | nu
 
 export async function listTemplates(ws: WorkspaceSlug): Promise<TemplateSummary[]> {
   const r = await call<{ results?: TemplateSummary[] }>(ws, "v2", "template/?limit=100");
-  return r.ok ? r.body.results ?? [] : [];
+  assertOk(r, "List templates");
+  return r.body.results ?? [];
 }
 
 export function getTemplate(ws: WorkspaceSlug, slug: string) {
@@ -395,7 +407,8 @@ export interface WorkflowSummary {
 
 export async function listWorkflows(ws: WorkspaceSlug): Promise<WorkflowSummary[]> {
   const r = await call<{ results?: WorkflowSummary[] }>(ws, "v1", "workflow/?mode=live&limit=100");
-  return r.ok ? r.body.results ?? [] : [];
+  assertOk(r, "List workflows");
+  return r.body.results ?? [];
 }
 
 export function getWorkflow(ws: WorkspaceSlug, slug: string) {
