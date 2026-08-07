@@ -46,7 +46,7 @@ Required: `body`. `header` = inbox title.
 Jsonnet quoting still applies inside `httpapi_fetch` + `branch` nodes (server auto-quotes).
 
 ## Categories (v1)
-- `GET/PATCH /v1/{ws}/preference_category/` — roots: system / transactional / promotional ship by default.
+- `GET/POST /v1/{ws}/preference_category/` — roots: system / transactional / promotional ship by default. Writes are POST; PATCH/PUT return 405.
 
 ## hub.suprsend.com (node SDK only)
 Users, tenants, lists, triggers, per-user preferences. Needs SDK signature auth (workspace key+secret) — not raw curl.

@@ -1,5 +1,5 @@
-// Server-side resolver for the active workspace. Server Components and (Phase 2)
-// API routes read the active workspace here so there is ONE source of truth.
+// Server-side resolver for the active workspace. Server Components and API
+// routes read the active workspace here so there is ONE source of truth.
 // The Management API uses one account-level Service Token; the workspace is
 // selected by URL path. This helper builds those paths.
 import "server-only";
