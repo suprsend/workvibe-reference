@@ -1,17 +1,53 @@
 {
-  "_comment": "Preference category tree, ported verbatim from the live SuprSend account (verified via GET /v1/{ws}/preference_category/?mode=live — not assumed). Every workflow's `category` field (see workflows.json) must match a category slug defined here, or publishing that workflow fails with a 400 ValidationError ('<category>' not found). Must be seeded BEFORE workflows.",
+  "_comment": "Preference category tree per workspace. All three root categories (system, transactional, promotional) MUST be present — the API rejects a partial tree. Every workflow's `category` (see workflows.json) must match a slug here, or publishing that workflow fails with a 400 ('<category>' not found). Seed BEFORE workflows. The two workspaces deliberately DIVERGE: only `account-security` is shared. That divergence is the point — each customer models what its own consumers get notified about.",
 
-  "workvibe-uber": [
+  "workvibe-loopride": [
     { "root_category": "system", "sections": [] },
     {
       "root_category": "transactional",
       "sections": [
         {
+          "name": "Your trips",
+          "slug": "your-trips",
+          "categories": [
+            {
+              "category": "trip-updates",
+              "name": "Trip updates",
+              "description": "Driver assigned, driver arriving, and trip status.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["inbox", "email"],
+              "default_mandatory_channels": null
+            },
+            {
+              "category": "receipts-and-billing",
+              "name": "Receipts & billing",
+              "description": "Trip receipts and payment charges.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["email"],
+              "default_mandatory_channels": null
+            }
+          ]
+        },
+        {
           "name": "Your account",
           "slug": "your-account",
           "categories": [
-            { "category": "onboarding-and-setup", "name": "Onboarding & Setup", "description": "Welcome steps and account setup for new hires.", "default_preference": "opt_in", "default_opt_in_channels": ["email"], "default_mandatory_channels": null },
-            { "category": "security-alerts", "name": "Security Alerts", "description": "Sign-ins and security-critical notices. Always on.", "default_preference": "cant_unsubscribe", "default_opt_in_channels": ["inbox"], "default_mandatory_channels": ["inbox"] }
+            {
+              "category": "getting-started",
+              "name": "Getting started",
+              "description": "Welcome and account setup for new users.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["email", "inbox"],
+              "default_mandatory_channels": null
+            },
+            {
+              "category": "account-security",
+              "name": "Account security",
+              "description": "Sign-ins and password changes. Always on.",
+              "default_preference": "cant_unsubscribe",
+              "default_opt_in_channels": ["email"],
+              "default_mandatory_channels": ["email"]
+            }
           ]
         }
       ]
@@ -20,29 +56,86 @@
       "root_category": "promotional",
       "sections": [
         {
-          "name": "From the People team",
-          "slug": "from-the-people-team",
+          "name": "Offers and news",
+          "slug": "offers-and-news",
           "categories": [
-            { "category": "surveys-and-feedback", "name": "Surveys & Feedback", "description": "Engagement surveys and feedback requests.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null },
-            { "category": "recognition", "name": "Recognition", "description": "Work anniversaries, shout-outs and celebrations.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null },
-            { "category": "announcements", "name": "Announcements", "description": "Company news and updates.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox"], "default_mandatory_channels": null }
+            {
+              "category": "offers-and-promos",
+              "name": "Offers & promos",
+              "description": "Ride credits, discounts and referral rewards.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["email", "inbox"],
+              "default_mandatory_channels": null
+            },
+            {
+              "category": "local-updates",
+              "name": "Local updates",
+              "description": "Service changes and news in your city.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["email"],
+              "default_mandatory_channels": null
+            }
           ]
         }
       ]
     }
   ],
 
-  "workvibe-spacex": [
+  "workvibe-northwind": [
     { "root_category": "system", "sections": [] },
     {
       "root_category": "transactional",
       "sections": [
         {
+          "name": "Your service",
+          "slug": "your-service",
+          "categories": [
+            {
+              "category": "service-status",
+              "name": "Service status",
+              "description": "Outages, planned maintenance and restoration.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["email", "inbox"],
+              "default_mandatory_channels": null
+            },
+            {
+              "category": "equipment-delivery",
+              "name": "Equipment delivery",
+              "description": "Router dispatch and delivery updates.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["email"],
+              "default_mandatory_channels": null
+            }
+          ]
+        },
+        {
           "name": "Your account",
           "slug": "your-account",
           "categories": [
-            { "category": "onboarding-and-setup", "name": "Onboarding & Setup", "description": "Welcome steps and account setup for new hires.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null },
-            { "category": "security-alerts", "name": "Security Alerts", "description": "Sign-ins and security-critical notices. Always on.", "default_preference": "cant_unsubscribe", "default_opt_in_channels": ["email"], "default_mandatory_channels": ["email"] }
+            {
+              "category": "getting-started",
+              "name": "Getting started",
+              "description": "Welcome and account setup for new users.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["email", "inbox"],
+              "default_mandatory_channels": null
+            },
+            {
+              "category": "account-security",
+              "name": "Account security",
+              "description": "Sign-ins and password changes. Always on.",
+              "default_preference": "cant_unsubscribe",
+              "default_opt_in_channels": ["email"],
+              "default_mandatory_channels": ["email"]
+            },
+            {
+              "category": "billing",
+              "name": "Billing",
+              "description": "Invoices, payment failures and plan changes.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["email"],
+              "default_mandatory_channels": null
+            }
           ]
         }
       ]
@@ -51,12 +144,17 @@
       "root_category": "promotional",
       "sections": [
         {
-          "name": "From the People team",
-          "slug": "from-the-people-team",
+          "name": "Product news",
+          "slug": "product-news-section",
           "categories": [
-            { "category": "surveys-and-feedback", "name": "Surveys & Feedback", "description": "Engagement surveys and feedback requests.", "default_preference": "opt_in", "default_opt_in_channels": ["email"], "default_mandatory_channels": null },
-            { "category": "recognition", "name": "Recognition", "description": "Work anniversaries, shout-outs and celebrations.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null },
-            { "category": "announcements", "name": "Announcements", "description": "Company news and updates.", "default_preference": "opt_in", "default_opt_in_channels": ["email", "inbox", "slack"], "default_mandatory_channels": null }
+            {
+              "category": "product-news",
+              "name": "Product news",
+              "description": "New features, coverage and speed upgrades.",
+              "default_preference": "opt_in",
+              "default_opt_in_channels": ["email", "inbox"],
+              "default_mandatory_channels": null
+            }
           ]
         }
       ]

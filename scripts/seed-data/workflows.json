@@ -1,133 +1,205 @@
 {
-  "_comment": "The 5 canonical workflows, ported verbatim from the live SuprSend account (verified via the Management API — not assumed). trigger_events are UPPERCASE because SuprSend upper-cases event names on ingestion. workvibe-uber and workvibe-spacex share identical structure; only the per-workflow `template` slug differs per workspace.",
+  "_comment": "Workflows per workspace. `category` must match a slug in categories.json — seed categories first or publishing 400s. Loopride runs 4 workflows, Northwind 5: the counts and the triggers differ on purpose. Promotional sends are NOT workflows — they go out as a broadcast to the all-subscribers list (see lib/server/hub.ts), which is why `offers-and-promos` and `product-news` have no workflow here.",
 
-  "workvibe-uber": [
+  "workvibe-loopride": [
     {
-      "slug": "employee-onboarding",
-      "name": "Employee Onboarding",
-      "description": "Auto-fires when an employee is added: welcome now, benefits nudge after 2 days.",
-      "category": "onboarding-and-setup",
+      "slug": "subscriber-onboarding",
+      "name": "Subscriber Onboarding",
+      "description": "Auto-fires when a user is added: welcome message on signup.",
+      "category": "getting-started",
       "trigger_type": "event",
-      "trigger_events": ["EMPLOYEE_ONBOARDED"],
+      "trigger_events": ["SUBSCRIBER_ONBOARDED"],
       "tree": {
         "nodes": [
-          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "new-hire-welcome", "success": "seen", "success_is_event": false } },
-          { "node_type": "delay", "name": "Delay", "properties": { "delay_type": "fixed", "value": "2d" } },
-          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "benefits-reminder", "success": "seen", "success_is_event": false } }
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "welcome-rider", "success": "seen", "success_is_event": false }
+          }
+        ]
+      }
+    },
+    {
+      "slug": "driver-arriving",
+      "name": "Driver Arriving",
+      "description": "Fires when the driver is close: one inbox + email nudge.",
+      "category": "trip-updates",
+      "trigger_type": "event",
+      "trigger_events": ["DRIVER_ARRIVING"],
+      "tree": {
+        "nodes": [
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "driver-arriving", "success": "seen", "success_is_event": false }
+          }
+        ]
+      }
+    },
+    {
+      "slug": "ride-completed",
+      "name": "Ride Completed",
+      "description": "Sends the trip receipt once the ride ends.",
+      "category": "receipts-and-billing",
+      "trigger_type": "event",
+      "trigger_events": ["RIDE_COMPLETED"],
+      "tree": {
+        "nodes": [
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "trip-receipt", "success": "seen", "success_is_event": false }
+          }
         ]
       }
     },
     {
       "slug": "sign-in-alert",
       "name": "Sign-in Alert",
-      "description": "Security alert when a new sign-in is detected.",
-      "category": "security-alerts",
+      "description": "Security notice on a new device sign-in. Can't be unsubscribed from.",
+      "category": "account-security",
       "trigger_type": "event",
       "trigger_events": ["NEW_SIGN_IN"],
-      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "security-sign-in-alert", "success": "seen", "success_is_event": false } }] }
-    },
-    {
-      "slug": "engagement-survey",
-      "name": "Engagement Survey",
-      "description": "Invite to the survey; remind after 3 days if no response.",
-      "category": "surveys-and-feedback",
-      "trigger_type": "api",
       "tree": {
         "nodes": [
-          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "engagement-survey-invite", "success": "seen", "success_is_event": false } },
           {
-            "node_type": "branch_waituntil",
-            "name": "Wait for response",
-            "properties": {},
-            "branches": [
-              { "name": "Responded", "is_default": false, "conditions": [{ "type": "future_event", "event_name": "SURVEY_COMPLETED", "event_conditions": [] }], "nodes": [] },
-              { "name": "No response after 3 days", "is_default": true, "conditions": [{ "type": "delay", "delay_properties": { "delay_type": "fixed", "value": "3d" } }], "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "engagement-survey-reminder", "success": "seen", "success_is_event": false } }] }
-            ]
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "sign-in-alert", "success": "seen", "success_is_event": false }
           }
         ]
       }
     },
     {
-      "slug": "peer-recognition",
-      "name": "Peer Recognition",
-      "description": "Notify an employee when they receive recognition.",
-      "category": "recognition",
-      "trigger_type": "event",
-      "trigger_events": ["RECOGNITION_RECEIVED"],
-      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "work-anniversary-recognition", "success": "seen", "success_is_event": false } }] }
-    },
-    {
-      "slug": "team-update",
-      "name": "Team Update",
-      "description": "Send an update to an individual team member (per-user trigger — see Send-test).",
-      "category": "announcements",
+      "slug": "city-service-update",
+      "name": "City Service Update",
+      "description": "Triggered from the API when service changes in a rider's city.",
+      "category": "local-updates",
       "trigger_type": "api",
-      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "all-hands-announcement", "success": "seen", "success_is_event": false } }] }
+      "tree": {
+        "nodes": [
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "local-service-update", "success": "seen", "success_is_event": false }
+          }
+        ]
+      }
     }
   ],
 
-  "workvibe-spacex": [
+  "workvibe-northwind": [
     {
-      "slug": "employee-onboarding",
-      "name": "Employee Onboarding",
-      "description": "Auto-fires when an employee is added: welcome now, benefits nudge after 2 days.",
-      "category": "onboarding-and-setup",
+      "slug": "subscriber-onboarding",
+      "name": "Subscriber Onboarding",
+      "description": "Auto-fires when a user is added: welcome message on signup.",
+      "category": "getting-started",
       "trigger_type": "event",
-      "trigger_events": ["EMPLOYEE_ONBOARDED"],
+      "trigger_events": ["SUBSCRIBER_ONBOARDED"],
       "tree": {
         "nodes": [
-          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "spacex-engineer-welcome", "success": "seen", "success_is_event": false } },
-          { "node_type": "delay", "name": "Delay", "properties": { "delay_type": "fixed", "value": "2d" } },
-          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "spacex-benefits-reminder", "success": "seen", "success_is_event": false } }
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "welcome-subscriber", "success": "seen", "success_is_event": false }
+          }
+        ]
+      }
+    },
+    {
+      "slug": "outage-detected",
+      "name": "Outage Detected",
+      "description": "Alerts affected subscribers as soon as an outage is detected.",
+      "category": "service-status",
+      "trigger_type": "event",
+      "trigger_events": ["OUTAGE_DETECTED"],
+      "tree": {
+        "nodes": [
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "service-outage", "success": "seen", "success_is_event": false }
+          }
+        ]
+      }
+    },
+    {
+      "slug": "service-restored",
+      "name": "Service Restored",
+      "description": "Follows an outage: confirms service is back.",
+      "category": "service-status",
+      "trigger_type": "event",
+      "trigger_events": ["SERVICE_RESTORED"],
+      "tree": {
+        "nodes": [
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "service-restored", "success": "seen", "success_is_event": false }
+          }
+        ]
+      }
+    },
+    {
+      "slug": "payment-failed",
+      "name": "Payment Failed",
+      "description": "Payment declined: notify now, retry reminder after 3 days.",
+      "category": "billing",
+      "trigger_type": "event",
+      "trigger_events": ["PAYMENT_FAILED"],
+      "tree": {
+        "nodes": [
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "payment-failed", "success": "seen", "success_is_event": false }
+          },
+          {
+            "node_type": "delay",
+            "name": "Delay",
+            "properties": { "delay_type": "fixed", "value": "3d" }
+          },
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "payment-retry-reminder", "success": "seen", "success_is_event": false }
+          }
+        ]
+      }
+    },
+    {
+      "slug": "equipment-shipped",
+      "name": "Equipment Shipped",
+      "description": "Router dispatched: tracking details to the subscriber.",
+      "category": "equipment-delivery",
+      "trigger_type": "event",
+      "trigger_events": ["EQUIPMENT_SHIPPED"],
+      "tree": {
+        "nodes": [
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "equipment-shipped", "success": "seen", "success_is_event": false }
+          }
         ]
       }
     },
     {
       "slug": "sign-in-alert",
       "name": "Sign-in Alert",
-      "description": "Security alert when a new sign-in is detected.",
-      "category": "security-alerts",
+      "description": "Security notice on a new device sign-in. Can't be unsubscribed from.",
+      "category": "account-security",
       "trigger_type": "event",
       "trigger_events": ["NEW_SIGN_IN"],
-      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "security-sign-in-alert", "success": "seen", "success_is_event": false } }] }
-    },
-    {
-      "slug": "engagement-survey",
-      "name": "Engagement Survey",
-      "description": "Invite to the survey; remind after 3 days if no response.",
-      "category": "surveys-and-feedback",
-      "trigger_type": "api",
       "tree": {
         "nodes": [
-          { "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "survey-invite", "success": "seen", "success_is_event": false } },
           {
-            "node_type": "branch_waituntil",
-            "name": "Wait for response",
-            "properties": {},
-            "branches": [
-              { "name": "Responded", "is_default": false, "conditions": [{ "type": "future_event", "event_name": "SURVEY_COMPLETED", "event_conditions": [] }], "nodes": [] },
-              { "name": "No response after 3 days", "is_default": true, "conditions": [{ "type": "delay", "delay_properties": { "delay_type": "fixed", "value": "3d" } }], "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "survey-reminder-1", "success": "seen", "success_is_event": false } }] }
-            ]
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "sign-in-alert", "success": "seen", "success_is_event": false }
           }
         ]
       }
-    },
-    {
-      "slug": "peer-recognition",
-      "name": "Peer Recognition",
-      "description": "Notify an employee when they receive recognition.",
-      "category": "recognition",
-      "trigger_type": "event",
-      "trigger_events": ["RECOGNITION_RECEIVED"],
-      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "work-anniversary-recognition", "success": "seen", "success_is_event": false } }] }
-    },
-    {
-      "slug": "team-update",
-      "name": "Team Update",
-      "description": "Send an update to an individual team member (per-user trigger — see Send-test).",
-      "category": "announcements",
-      "trigger_type": "api",
-      "tree": { "nodes": [{ "node_type": "send_multi_channel", "name": "Multi-Channel", "properties": { "template": "company-announcement", "success": "seen", "success_is_event": false } }] }
     }
   ]
 }
