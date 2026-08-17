@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   FileText,
   Workflow,
+  Megaphone,
   Activity,
   BarChart3,
   SlidersHorizontal,
@@ -30,6 +31,7 @@ const NAV: NavGroup[] = [
     items: [
       { label: "Templates", href: "/admin/templates", icon: FileText },
       { label: "Workflows", href: "/admin/workflows", icon: Workflow },
+      { label: "Broadcast", href: "/admin/broadcast", icon: Megaphone },
       { label: "Executions", href: "/admin/executions", icon: Activity },
       { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
       { label: "Users", href: "/admin/users", icon: Users },

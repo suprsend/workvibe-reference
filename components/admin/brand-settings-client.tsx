@@ -246,7 +246,7 @@ function Body() {
               </div>
               <div className="space-y-3 p-4">
                 <p className="text-sm text-muted-foreground">
-                  Sample email from the <strong className="text-foreground">{brand.tenantName || "—"}</strong> People team.
+                  Sample email from <strong className="text-foreground">{brand.tenantName || "—"}</strong>.
                 </p>
                 <button
                   type="button"

@@ -1,6 +1,6 @@
 # WorkVibe
 
-A multi-tenant **workplace-notification platform** built on [SuprSend](https://www.suprsend.com). WorkVibe lets an admin manage notification **templates** and **workflows**, deliver them across **email, in-app inbox, and Slack**, manage **per-employee preferences**, and watch **executions** and **analytics** — all isolated per customer workspace.
+A multi-tenant **customer-notification platform** built on [SuprSend](https://www.suprsend.com). WorkVibe lets an admin manage notification **templates** and **workflows**, **broadcast** to the whole subscriber list, deliver across **email, in-app inbox, and Slack**, manage **per-subscriber preferences**, and watch **executions** and **analytics** — all isolated per customer workspace.
 
 It doubles as a reference implementation of the SuprSend management API, node SDK, embedded template editor, and React inbox/preference components in a real Next.js App Router app.
 
@@ -16,7 +16,8 @@ It doubles as a reference implementation of the SuprSend management API, node SD
 | **Workflows** | Notification journeys — triggers, waits, branching (wait-for-response, conditions) — rendered on a canvas, with per-user Send-test. |
 | **Executions** | Live message log + grouped per-run view (status, per-channel delivery, resend). |
 | **Analytics** | Delivery/open funnel, by-channel and by-template/workflow breakdowns, opt-out metrics. |
-| **Preferences** | Workspace defaults + per-employee category/channel preferences, with "required" (non-unsubscribable) categories. |
+| **Broadcast** | Send one promotional template to every subscriber on the `all-subscribers` list in a single call. |
+| **Preferences** | Workspace defaults + per-subscriber category/channel preferences, with "required" (non-unsubscribable) categories. |
 | **Users** | Live SuprSend subscribers — add/edit/remove, role, preferences, delivery log. |
 | **Branding** | Per-workspace tenant brand (logo, colours) applied to emails and the inbox. |
 | **Multi-tenant** | Each workspace is its own isolated SuprSend workspace; switch in the top bar. |
@@ -27,7 +28,7 @@ It doubles as a reference implementation of the SuprSend management API, node SD
 
 ```
 app/
-  admin/          Admin surfaces (templates, workflows, executions, analytics, users, …)
+  admin/          Admin surfaces (templates, workflows, broadcast, executions, analytics, users, …)
   user/           End-user surfaces (inbox, preferences)
   api/            Route handlers — the only place that talks to SuprSend
 components/        Client components (one *-client.tsx per surface) + shared UI
@@ -50,7 +51,7 @@ public/wf-engine.js   Canvas rendering engine
 
 > **⚠️ Security note — this demo has no authentication.**
 >
-> WorkVibe is meant to run **locally only**. There is no login, and no request is checked against a session, so anyone who can reach the app can act as any employee or admin. **Do not deploy it to the public internet as-is.**
+> WorkVibe is meant to run **locally only**. There is no login, and no request is checked against a session, so anyone who can reach the app can act as any user or admin. **Do not deploy it to the public internet as-is.**
 >
 > Two routes in particular mint SuprSend JWTs for any caller. Before reusing these patterns in production:
 >
@@ -94,7 +95,7 @@ https://app.suprsend.com/en/<workspace-slug>/developers/api-keys
 
 The `<workspace-slug>` in that URL can differ per account — copy it from your browser's address bar when viewing the workspace.
 
-**6. Seed the content.** WorkVibe ships with a working set of preference categories, templates, and workflows (welcome emails, security alerts, a survey journey, recognition, a team update). This publishes all of it into your freshly-created workspaces, in the required order:
+**6. Seed the content.** WorkVibe ships with a working set of preference categories, templates, and workflows for each demo workspace — trip updates, receipts and ride offers for Loopride; outage, billing and equipment notifications plus product news for Northwind. This publishes all of it into your freshly-created workspaces, in the required order:
 
 ```bash
 node --env-file=.env.local scripts/provision.mjs all
@@ -110,7 +111,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Environment variables
 
-`<PREFIX>` is the workspace slug, uppercased with dashes → underscores — e.g. slug `workvibe-uber` → `SUPRSEND_WORKVIBE_UBER` (public vars are prefixed `NEXT_PUBLIC_`).
+`<PREFIX>` is the workspace slug, uppercased with dashes → underscores — e.g. slug `workvibe-loopride` → `SUPRSEND_WORKVIBE_LOOPRIDE` (public vars are prefixed `NEXT_PUBLIC_`).
 
 | Variable | Where to find it |
 |---|---|

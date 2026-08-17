@@ -9,7 +9,7 @@ import type { WorkUser } from "@/lib/server/users";
 interface WorkspaceState {
   workspace: WorkspaceSlug;
   setWorkspace: (slug: WorkspaceSlug) => void;
-  /** The employee currently being impersonated in the Employee view. */
+  /** The user currently being impersonated in the User view. */
   actorId: string;
   setActorId: (id: string) => void;
   /** Live SuprSend subscribers for the active workspace (the "viewing as" + Send-test roster). */

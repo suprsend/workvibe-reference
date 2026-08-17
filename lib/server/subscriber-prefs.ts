@@ -1,4 +1,4 @@
-// Admin-scoped read/write of ONE employee's notification preferences (the Per-user
+// Admin-scoped read/write of ONE user's notification preferences (the Per-user
 // support tool). Server-side: we mint a subscriber JWT for the picked distinct_id
 // (same ES256 signing key as /api/subscriber-token) and call hub directly — the
 // node SDK has no preference methods, so this is the supported path.

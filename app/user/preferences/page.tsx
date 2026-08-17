@@ -1,5 +1,5 @@
 import { PreferencesClient } from "@/components/user/preferences-client";
 
-export default function EmployeePreferencesPage() {
+export default function UserPreferencesPage() {
   return <PreferencesClient />;
 }

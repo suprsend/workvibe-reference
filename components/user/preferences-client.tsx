@@ -10,7 +10,7 @@ export function PreferencesClient() {
   return (
     <>
       <PageHeader title="Notification preferences" description="Choose what you hear about, and how." />
-      {/* Remount per workspace + impersonated employee so it loads fresh prefs. */}
+      {/* Remount per workspace + impersonated user so it loads fresh prefs. */}
       <PreferenceCenter
         key={`${workspace}:${actorId}`}
         distinctId={actorId}

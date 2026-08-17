@@ -34,7 +34,7 @@ export function ViewingAs() {
         <ChevronsUpDown className="size-4 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel className="text-xs text-muted-foreground">Employee</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs text-muted-foreground">Subscriber</DropdownMenuLabel>
         {users.map((e) => (
           <DropdownMenuItem key={e.distinctId} onSelect={() => setActorId(e.distinctId)} className="gap-2">
             <span className="flex flex-col">

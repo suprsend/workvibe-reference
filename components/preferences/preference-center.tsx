@@ -11,8 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CHANNEL_ICON, CHANNEL_LABEL } from "@/lib/message-display";
 
 // Shared notification preference center for ONE subscriber. Used by both
-// User · Preferences (acting as the "viewing as" employee) and Admin · Per-user
-// (acting on a picked employee). Reads/writes through a SYNCHRONOUS server route
+// User · Preferences (acting as the "viewing as" user) and Admin · Per-user
+// (acting on a picked user). Reads/writes through a SYNCHRONOUS server route
 // (`endpoint`) that PATCHes hub directly — no client-SDK debounce, so a toggle
 // persists even if the user immediately navigates away (the bug BTS never had).
 export function PreferenceCenter({

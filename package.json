@@ -2,7 +2,7 @@
   "name": "workvibe",
   "version": "0.1.0",
   "private": true,
-  "description": "Multi-tenant workplace-notification platform built on SuprSend — AI-authored templates and workflows, email/inbox/Slack delivery, per-employee preferences, executions and analytics.",
+  "description": "Multi-tenant customer-notification platform built on SuprSend — AI-authored templates and workflows, list broadcasts, email/inbox/Slack delivery, per-subscriber preferences, executions and analytics.",
   "license": "MIT",
   "keywords": [
     "suprsend",

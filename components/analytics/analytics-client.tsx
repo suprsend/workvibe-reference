@@ -186,7 +186,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-// "Are employees opting out?" — computed from real preference state. One row per
+// "Are subscribers opting out?" — computed from real preference state. One row per
 // category; every count is verifiable against each user's preferences.
 const OPTOUT_CHANNELS = ["email", "inbox", "slack"] as const;
 // Plain count cell — meaning lives in the column header, not in colour. Zeros are
@@ -209,16 +209,16 @@ function OptOuts({ summary }: { summary: OptOutSummary | null }) {
     <div>
       <h2 className="text-sm font-semibold">Opt-outs</h2>
       <p className="mb-2 text-xs text-muted-foreground">
-        Per category — who isn’t receiving, and why. Counted live from {summary.totalUsers} employees’ preferences.
+        Per category — who isn’t receiving, and why. Counted live from {summary.totalUsers} users’ preferences.
       </p>
       <div className="overflow-hidden rounded-lg border border-border">
         <div className={`${cols} border-b border-border bg-muted/30 px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground`}>
           <span>Category</span>
-          <span className="text-right" title="Category off — the employee turned the whole category off themselves">Opted out</span>
+          <span className="text-right" title="Category off — the user turned the whole category off themselves">Opted out</span>
           <span className="text-right" title="Category off — never subscribed, inherited an off-by-default category">Off by default</span>
-          <span className="text-right" title="Category on, but Email off for this employee">Email off</span>
-          <span className="text-right" title="Category on, but Inbox off for this employee">Inbox off</span>
-          <span className="text-right" title="Category on, but Slack off for this employee">Slack off</span>
+          <span className="text-right" title="Category on, but Email off for this user">Email off</span>
+          <span className="text-right" title="Category on, but Inbox off for this user">Inbox off</span>
+          <span className="text-right" title="Category on, but Slack off for this user">Slack off</span>
         </div>
         {summary.rows.map((r) => (
           <div key={r.category} className={`${cols} border-b border-border px-4 py-3 text-sm last:border-0`}>

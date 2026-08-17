@@ -1,8 +1,8 @@
-// Live employees = SuprSend subscribers (the Users tab). Backed entirely by the
+// Live users = SuprSend subscribers (the Users tab). Backed entirely by the
 // hub user API via the node SDK — list / get / add (upsert) / remove (delete).
 // Role + name live in user `properties`; email is the `$email` channel.
 import "server-only";
-import type { Workspace } from "@/lib/workspaces";
+import type { Workspace, WorkspaceSlug } from "@/lib/workspaces";
 import { suprsendClient as client, envPrefix } from "@/lib/server/workspace";
 
 // A Slack identity for the $slack channel. Either an incoming webhook (one fixed
@@ -12,26 +12,57 @@ export type SlackIdentity =
   | { bot_token: string; channel: string };
 
 // The workspace's Slack incoming webhook (one channel for everyone). Set per
-// workspace in env — we auto-attach it to every employee, so Slack delivery +
-// the Slack preference toggle work without anyone pasting a URL per employee.
+// workspace in env — we auto-attach it to every user, so Slack delivery +
+// the Slack preference toggle work without anyone pasting a URL per user.
 export function getWorkspaceSlackWebhook(ws: Workspace): SlackIdentity | null {
   const prefix = envPrefix(ws);
   const url = process.env[`${prefix}_SLACK_WEBHOOK`];
   return url ? { incoming_webhook: { url } } : null;
 }
 
-// Event emitted when a new employee is added. An event-triggered workflow
-// (`event-employee-onboarding`, trigger_type:"event") listens for it and fires
-// onboarding automatically — no manual Send test. SuprSend upper-cases the name.
-export const ONBOARDING_EVENT = "employee_onboarded";
+// Event emitted when a new subscriber is added. An event-triggered workflow
+// (trigger_type:"event") listens for it and fires onboarding automatically —
+// no manual Send test. SuprSend upper-cases the name.
+export const ONBOARDING_EVENT = "subscriber_onboarded";
 
-// A static list every employee joins on creation — the company-wide audience
-// (used for list membership; every new hire is added on creation).
-export const ALL_EMPLOYEES_LIST = "all-employees";
+// A static list every subscriber joins on creation — the whole-audience list,
+// and the target every broadcast fans out to.
+export const ALL_SUBSCRIBERS_LIST = "all-subscribers";
 
-/** Add a user to the all-employees list (idempotent). Best-effort. */
-export async function addToAllEmployeesList(ws: Workspace, distinctId: string) {
-  return client(ws).subscriber_lists.add(ALL_EMPLOYEES_LIST, [distinctId]);
+// Nothing else creates the list — we only ever add to it, and `add` against a
+// list that doesn't exist fails. So create it on first use. The promise is
+// cached per workspace, so concurrent adds share one create and every later add
+// skips the round-trip; a failure is evicted so the next add retries.
+const listReady = new Map<WorkspaceSlug, Promise<void>>();
+
+function ensureSubscribersList(ws: Workspace): Promise<void> {
+  const cached = listReady.get(ws.slug);
+  if (cached) return cached;
+  const ready = (async () => {
+    const c = client(ws);
+    try {
+      await c.subscriber_lists.get(ALL_SUBSCRIBERS_LIST);
+      return; // already there
+    } catch {
+      // Not found — create it below.
+    }
+    await c.subscriber_lists.create({
+      list_id: ALL_SUBSCRIBERS_LIST,
+      list_name: "All subscribers",
+      list_description: "Every subscriber in this workspace — the broadcast audience.",
+    });
+  })().catch((e) => {
+    listReady.delete(ws.slug);
+    throw e;
+  });
+  listReady.set(ws.slug, ready);
+  return ready;
+}
+
+/** Add a user to the all-subscribers list, creating the list if needed. Best-effort. */
+export async function addToSubscribersList(ws: Workspace, distinctId: string) {
+  await ensureSubscribersList(ws);
+  return client(ws).subscriber_lists.add(ALL_SUBSCRIBERS_LIST, [distinctId]);
 }
 
 export interface WorkUser {
@@ -81,7 +112,7 @@ export async function getUser(ws: Workspace, distinctId: string): Promise<WorkUs
   }
 }
 
-/** Add or update an employee: sets email + name + role (+ optional Slack identity). */
+/** Add or update a user: sets email + name + role (+ optional Slack identity). */
 export async function upsertUser(
   ws: Workspace,
   distinctId: string,

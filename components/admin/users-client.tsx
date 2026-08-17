@@ -39,7 +39,7 @@ function Body() {
       const res = await fetch("/api/users", { cache: "no-store" });
       const data = await res.json();
       if (!data.ok) {
-        setError(data.error ?? "Couldn’t load employees.");
+        setError(data.error ?? "Couldn’t load users.");
         setUsers([]);
       } else {
         setError(null);
@@ -60,7 +60,7 @@ function Body() {
         const data = await res.json();
         if (!active) return;
         if (!data.ok) {
-          setError(data.error ?? "Couldn’t load employees.");
+          setError(data.error ?? "Couldn’t load users.");
           setUsers([]);
         } else {
           setUsers(data.users);
@@ -82,7 +82,7 @@ function Body() {
     const res = await fetch(`/api/users?distinct_id=${encodeURIComponent(u.distinctId)}`, { method: "DELETE" });
     const data = await res.json();
     if (data.ok) {
-      toast.success("Employee removed", { description: u.name });
+      toast.success("User removed", { description: u.name });
       setSelected(null);
       load(null as unknown as string);
       refreshUsers(); // keep the "viewing as" + Send-test roster in sync
@@ -113,8 +113,8 @@ function Body() {
       ) : users.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No employees yet"
-          description="Add an employee and they’ll start receiving notifications according to the workspace defaults."
+          title="No users yet"
+          description="Add a user and they’ll start receiving notifications according to the workspace defaults."
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-[260px_1fr]">
@@ -208,8 +208,8 @@ function UserDetail({ user, onChanged, onRemove }: { user: WorkUser; onChanged: 
           distinctId={user.distinctId}
           endpoint="/api/admin/user-preferences"
           emptyIcon={BadgeCheck}
-          emptyTitle="No categories for this employee"
-          emptyDescription="Once the workspace defines notification categories, this employee’s settings show up here."
+          emptyTitle="No categories for this user"
+          emptyDescription="Once the workspace defines notification categories, this user’s settings show up here."
         />
       </div>
 
@@ -247,7 +247,7 @@ function DeliveryLog({ distinctId }: { distinctId: string }) {
         <Skeleton className="h-24 w-full rounded-lg" />
       ) : rows.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-          Nothing sent to this employee yet.
+          Nothing sent to this user yet.
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-border">
@@ -288,7 +288,7 @@ function AddUser({ onAdded }: { onAdded: (id: string) => void }) {
       const data = await res.json();
       if (data.ok) {
         toast.success(
-          data.onboardingFired ? "Employee added — onboarding sent" : "Employee added",
+          data.onboardingFired ? "User added — onboarding sent" : "User added",
           { description: data.onboardingFired ? `${name} will receive the welcome automatically` : name },
         );
         setOpen(false);
@@ -308,12 +308,12 @@ function AddUser({ onAdded }: { onAdded: (id: string) => void }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm">
-          <Plus className="size-4" /> Add employee
+          <Plus className="size-4" /> Add user
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add employee</DialogTitle>
+          <DialogTitle>Add user</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <label className="block text-sm">
@@ -329,9 +329,10 @@ function AddUser({ onAdded }: { onAdded: (id: string) => void }) {
             <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Software Engineer" />
           </label>
           <p className="text-xs text-muted-foreground">
-            Adding an employee emits an <code>employee_onboarded</code> event — the event-triggered
-            onboarding workflow sends their welcome automatically, no manual test. They start on the
-            workspace default preferences and join the workspace Slack channel.
+            Adding a user emits a <code>subscriber_onboarded</code> event — the event-triggered
+            onboarding workflow sends their welcome automatically, no manual test. They join the
+            all-subscribers list, start on the workspace default preferences, and join the workspace
+            Slack channel.
           </p>
         </div>
         <DialogFooter>
@@ -339,7 +340,7 @@ function AddUser({ onAdded }: { onAdded: (id: string) => void }) {
             Cancel
           </Button>
           <Button onClick={submit} disabled={busy || !name.trim() || !email.trim()}>
-            {busy ? "Adding…" : "Add employee"}
+            {busy ? "Adding…" : "Add user"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -4,7 +4,7 @@ import { getActiveWorkspace } from "@/lib/server/workspace";
 import { getUserCategories, updateUserCategory } from "@/lib/server/subscriber-prefs";
 
 // Admin-scoped: accepts any live subscriber distinct_id in the active workspace
-// (the Users tab passes ids from the live user list, not just the seed employees).
+// (the Users tab passes ids from the live user list, not just the seeded users).
 export async function GET(req: Request) {
   try {
     const ws = await getActiveWorkspace();

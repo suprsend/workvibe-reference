@@ -102,7 +102,7 @@ export async function savePreferenceConfig(ws: WorkspaceSlug, edits: PrefEdit[])
         c.default_preference = e.preference;
         // Always set the on-by-default channel set. For a Required (cant_unsubscribe)
         // category, ALSO mark those channels mandatory (locked). Verified empirically:
-        // setting ONLY mandatory left the other channels on+editable for new hires —
+        // setting ONLY mandatory left the other channels on+editable for new users —
         // setting opt_in too turns the UNSELECTED channels OFF by default (the
         // intuitive result). For opt_out, SuprSend ignores opt_in channels anyway.
         c.default_opt_in_channels = e.optInChannels;
