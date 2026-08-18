@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { Users, Plus, Trash2, Mail, Bell, BadgeCheck, MessageSquare } from "lucide-react";
+import { Users, Trash2, Mail, Bell, BadgeCheck } from "lucide-react";
 import type { WorkUser } from "@/lib/server/users";
 import type { MessageRecord } from "@/lib/server/messages";
 import { useWorkspace } from "@/components/providers";
@@ -10,16 +10,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { PreferenceCenter } from "@/components/preferences/preference-center";
 import { activityBadge, CHANNEL_ICON, CHANNEL_LABEL, timeAgo } from "@/lib/message-display";
 
@@ -97,8 +88,7 @@ function Body() {
     <>
       <PageHeader
         title="Users"
-        description="Everyone in this workspace — their contact, role, notification preferences, and what they’ve been sent."
-        actions={users ? <AddUser onAdded={(id) => { load(id); refreshUsers(); }} /> : undefined}
+        description="Everyone subscribed in this workspace — their contact, role, notification preferences, and what they’ve been sent. Subscribers sign up in the customer’s own product; this roster is read-only apart from edits and removal."
       />
 
       {error && (
@@ -113,8 +103,8 @@ function Body() {
       ) : users.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No users yet"
-          description="Add a user and they’ll start receiving notifications according to the workspace defaults."
+          title="No subscribers yet"
+          description="Run the provisioning users stage to seed this workspace’s demo subscribers. Real subscribers arrive when they sign up in the customer’s product."
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-[260px_1fr]">
@@ -133,42 +123,24 @@ function Body() {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{u.name}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{u.role ?? u.email ?? u.distinctId}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{u.email ?? u.distinctId}</span>
                 </span>
               </button>
             ))}
           </div>
 
           {/* Detail */}
-          {current ? <UserDetail key={current.distinctId} user={current} onChanged={() => load(current.distinctId)} onRemove={() => remove(current)} /> : null}
+          {current ? <UserDetail key={current.distinctId} user={current} onRemove={() => remove(current)} /> : null}
         </div>
       )}
     </>
   );
 }
 
-function UserDetail({ user, onChanged, onRemove }: { user: WorkUser; onChanged: () => void; onRemove: () => void }) {
-  const [role, setRole] = React.useState(user.role ?? "");
-  const roleDirty = (user.role ?? "") !== role;
-
-  async function saveRole() {
-    const res = await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ distinct_id: user.distinctId, role }),
-    });
-    const data = await res.json();
-    if (data.ok) {
-      toast.success("Role updated");
-      onChanged();
-    } else {
-      toast.error("Couldn’t update role", { description: data.error });
-    }
-  }
-
+function UserDetail({ user, onRemove }: { user: WorkUser; onRemove: () => void }) {
   return (
     <div className="min-w-0 space-y-6">
-      {/* Contact + role */}
+      {/* Contact */}
       <div className="rounded-lg border border-border p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -180,23 +152,11 @@ function UserDetail({ user, onChanged, onRemove }: { user: WorkUser; onChanged: 
               <span className="flex items-center gap-1.5">
                 <Bell className="size-3.5" /> Inbox {user.hasInbox ? "active" : "—"}
               </span>
-              <span className="flex items-center gap-1.5">
-                <MessageSquare className="size-3.5" /> Slack {user.hasSlack ? "active" : "—"}
-              </span>
               <code className="text-xs">{user.distinctId}</code>
             </div>
           </div>
           <Button variant="outline" size="sm" className="text-destructive" onClick={onRemove}>
             <Trash2 className="size-4" /> Remove
-          </Button>
-        </div>
-        <div className="mt-4 flex items-end gap-2 border-t border-border pt-4">
-          <label className="flex-1 text-xs">
-            <span className="mb-1 block text-muted-foreground">Role</span>
-            <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Avionics Engineer" className="h-9" />
-          </label>
-          <Button size="sm" className="h-9" disabled={!roleDirty} onClick={saveRole}>
-            Save role
           </Button>
         </div>
       </div>
@@ -267,83 +227,5 @@ function DeliveryLog({ distinctId }: { distinctId: string }) {
         </div>
       )}
     </div>
-  );
-}
-
-function AddUser({ onAdded }: { onAdded: (id: string) => void }) {
-  const [open, setOpen] = React.useState(false);
-  const [name, setName] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [role, setRole] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
-
-  async function submit() {
-    setBusy(true);
-    try {
-      const res = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, role }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        toast.success(
-          data.onboardingFired ? "User added — onboarding sent" : "User added",
-          { description: data.onboardingFired ? `${name} will receive the welcome automatically` : name },
-        );
-        setOpen(false);
-        setName("");
-        setEmail("");
-        setRole("");
-        onAdded(data.distinctId);
-      } else {
-        toast.error("Couldn’t add", { description: data.error });
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="size-4" /> Add user
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add user</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Name</span>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Aarav Sharma" />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Email</span>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" type="email" />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">Role (optional)</span>
-            <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Software Engineer" />
-          </label>
-          <p className="text-xs text-muted-foreground">
-            Adding a user emits a <code>subscriber_onboarded</code> event — the event-triggered
-            onboarding workflow sends their welcome automatically, no manual test. They join the
-            all-subscribers list, start on the workspace default preferences, and join the workspace
-            Slack channel.
-          </p>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>
-            Cancel
-          </Button>
-          <Button onClick={submit} disabled={busy || !name.trim() || !email.trim()}>
-            {busy ? "Adding…" : "Add user"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

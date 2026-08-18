@@ -27,10 +27,10 @@ export async function POST(req: Request) {
     // workflow's templates' sample data, then the chosen user, then any caller
     // overrides — this prevents "missing variables" render failures.
     const base = await getWorkflowTriggerData(ws.slug, workflow_slug);
-    // Pass the user's name + role so templates can render {{user_name}} and
-    // {{role}} directly (reliable — a plain trigger variable, no dependency on
-    // SuprSend auto-injecting recipient properties).
-    const payload = { ...base, user_name: user.name, role: user.role ?? "", ...(data ?? {}) };
+    // Pass the user's name so templates can render {{user_name}} directly
+    // (reliable — a plain trigger variable, no dependency on SuprSend
+    // auto-injecting recipient properties).
+    const payload = { ...base, user_name: user.name, ...(data ?? {}) };
 
     // Trigger the RIGHT way for this workflow's trigger type. An event-triggered
     // workflow can't be fired by the workflow-trigger API — it only runs when its
