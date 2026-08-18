@@ -13,7 +13,7 @@ import { CHANNEL_ICON, CHANNEL_LABEL } from "@/lib/message-display";
 
 // Channels the workspace authors templates for. (Only channels with a connected
 // vendor actually reach users — Email today; Inbox once enabled in SuprSend.)
-const CHANNELS = ["email", "inbox", "slack"];
+const CHANNELS = ["email", "inbox"];
 
 // Plain-English: what the DEFAULT subscription state is for a new user, and
 // whether they're allowed to change it. (SuprSend: opt_in / opt_out / cant_unsubscribe.)

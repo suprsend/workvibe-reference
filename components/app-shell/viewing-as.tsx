@@ -39,7 +39,7 @@ export function ViewingAs() {
           <DropdownMenuItem key={e.distinctId} onSelect={() => setActorId(e.distinctId)} className="gap-2">
             <span className="flex flex-col">
               <span className="text-sm font-medium leading-tight">{e.name}</span>
-              <span className="text-xs text-muted-foreground leading-tight">{e.role ?? e.email ?? e.distinctId}</span>
+              <span className="text-xs text-muted-foreground leading-tight">{e.email ?? e.distinctId}</span>
             </span>
             {e.distinctId === current.distinctId && <Check className="ml-auto size-4" />}
           </DropdownMenuItem>

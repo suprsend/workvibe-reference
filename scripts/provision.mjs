@@ -72,7 +72,6 @@ function requiredVars(slug) {
     { name: `${p}_SIGNING_KEY_UID`, note: 'Signing Key UID (signing_key_…) — NOT the ID (ws_signk_…)' },
     { name: `${p}_SIGNING_KEY_B64`, note: "Signing key PEM, base64-encoded (see README)" },
     { name: `${pub}_PUBLIC_KEY`, note: "Public Key (SS.PUBK…) — browser inbox SDK" },
-    { name: `${p}_SLACK_WEBHOOK`, note: "Slack incoming-webhook URL (optional)" },
   ];
 }
 
@@ -387,15 +386,36 @@ async function cmdWorkflows() {
 
 // ── Command ──────────────────────────────────────────────────────────────────
 // ── Stage: users ──────────────────────────────────────────────────────────────
-// Creates the preview recipient every template's mock_data points at. Without a
-// real user behind that distinct_id the editor preview has no $recipient, and
-// each template shows «"name" not defined in [object Object]».
+// Seeds the demo consumers. These stand in for people who signed up in the
+// CUSTOMER's own product, so this stage — not an admin typing into WorkVibe — is
+// where a consumer enters the system. For each user it has to CREATE it emits
+// SUBSCRIBER_ONBOARDED, which is what fires the onboarding workflow; users that
+// already exist are updated silently, so re-running never re-sends a welcome.
+//
+// The first entry is the preview recipient every template's mock_data points at.
+// Without it the editor preview has no $recipient and every {{$recipient.*}}
+// reports «"name" not defined in [object Object]».
 //
 // This is the one stage that talks to the hub rather than the Management API —
 // user ingestion is SDK-only, so it needs the per-workspace WORKSPACE_KEY/SECRET
 // (the Service Token alone can't do it).
+const SUBSCRIBERS_LIST = "all-subscribers";
+const ONBOARDING_EVENT = "subscriber_onboarded";
+
+async function ensureList(client) {
+  try {
+    await client.subscriber_lists.get(SUBSCRIBERS_LIST);
+  } catch {
+    await client.subscriber_lists
+      .create({ list_id: SUBSCRIBERS_LIST, list_name: "All subscribers", list_description: "Every consumer in this workspace — the broadcast audience." })
+      .catch(() => {});
+  }
+}
+
 async function cmdUsers() {
-  const { Suprsend } = await import("@suprsend/node-sdk");
+  const { Suprsend, Event: SuprsendEvent } = await import("@suprsend/node-sdk");
+  const roster = readJson("seed-data/users.json");
+
   for (const { slug } of readWorkspaces()) {
     const p = envPrefix(slug);
     const key = process.env[`${p}_WORKSPACE_KEY`];
@@ -405,15 +425,43 @@ async function cmdUsers() {
       console.log(`  ✗ ${p}_WORKSPACE_KEY / _WORKSPACE_SECRET not set — paste them from the dashboard first`);
       continue;
     }
-    try {
-      const client = new Suprsend(key, secret);
-      const edit = client.users.get_edit_instance(PREVIEW_RECIPIENT);
-      edit.add_email("preview@example.com");
-      edit.set({ name: "Sam Rivera" });
-      await client.users.edit(edit);
-      console.log(`  ✓ ${PREVIEW_RECIPIENT} (Sam Rivera) — template previews will resolve {{$recipient.*}}`);
-    } catch (e) {
-      console.log(`  ✗ ${PREVIEW_RECIPIENT}: ${e?.message ?? e}`);
+    const people = roster[slug] ?? [];
+    if (people.length === 0) {
+      console.log("  – no users seeded for this workspace");
+      continue;
+    }
+
+    const client = new Suprsend(key, secret);
+    await ensureList(client);
+
+    for (const person of people) {
+      const { distinct_id: id, name, email } = person;
+      try {
+        // A signup happens once. Only a user we actually had to create gets the
+        // onboarding event, so re-provisioning doesn't re-send welcome messages.
+        let existed = false;
+        try {
+          const u = await client.users.get(id);
+          existed = Boolean(u?.distinct_id);
+        } catch {
+          existed = false;
+        }
+
+        const edit = client.users.get_edit_instance(id);
+        if (email) edit.add_email(email);
+        if (name) edit.set({ name });
+        await client.users.edit(edit);
+        await client.subscriber_lists.add(SUBSCRIBERS_LIST, [id]).catch(() => {});
+
+        if (!existed) {
+          await client.track_event(new SuprsendEvent(id, ONBOARDING_EVENT, {}, { tenant_id: "default" }));
+        }
+        const note = existed ? "updated" : "created + onboarding event";
+        const preview = id === PREVIEW_RECIPIENT ? "  (template preview recipient)" : "";
+        console.log(`  ✓ ${id.padEnd(14)} ${(name ?? "").padEnd(14)} ${note}${preview}`);
+      } catch (e) {
+        console.log(`  ✗ ${id}: ${e?.message ?? e}`);
+      }
     }
   }
 }

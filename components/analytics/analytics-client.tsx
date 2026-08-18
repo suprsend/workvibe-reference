@@ -188,7 +188,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 // "Are subscribers opting out?" — computed from real preference state. One row per
 // category; every count is verifiable against each user's preferences.
-const OPTOUT_CHANNELS = ["email", "inbox", "slack"] as const;
+const OPTOUT_CHANNELS = ["email", "inbox"] as const;
 // Plain count cell — meaning lives in the column header, not in colour. Zeros are
 // dimmed so the eye lands on the non-zero numbers.
 function Count({ n, title }: { n: number; title?: string }) {
