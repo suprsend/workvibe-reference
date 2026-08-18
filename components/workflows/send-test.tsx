@@ -21,16 +21,16 @@ export function SendTest({
 
   // Derive the effective selection: the user's pick if still valid, else the first
   // deliverable user. No effect needed — avoids cascading-render churn on load.
-  const employeeId = roster.some((u) => u.distinctId === picked) ? picked : roster[0]?.distinctId ?? "";
+  const userId = roster.some((u) => u.distinctId === picked) ? picked : roster[0]?.distinctId ?? "";
 
   async function send() {
-    if (!employeeId) return;
+    if (!userId) return;
     setSending(true);
     try {
       const res = await fetch("/api/trigger", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workflow_slug: workflowSlug, employee_id: employeeId, data }),
+        body: JSON.stringify({ workflow_slug: workflowSlug, user_id: userId, data }),
       });
       const d = await res.json();
       if (d.ok) toast.success("Test sent", { description: `Triggered for ${d.recipient} (${d.email}).` });
@@ -45,7 +45,7 @@ export function SendTest({
   if (!usersLoading && roster.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No employees with an email yet. Add one in the Users tab to send a test.
+        No users with an email yet. Add one in the Users tab to send a test.
       </p>
     );
   }
@@ -54,7 +54,7 @@ export function SendTest({
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-sm text-muted-foreground">Send a test to</span>
       <select
-        value={employeeId}
+        value={userId}
         onChange={(e) => setPicked(e.target.value)}
         disabled={usersLoading || roster.length === 0}
         className="rounded-md border border-border bg-background px-2.5 py-1.5 text-sm"
@@ -65,7 +65,7 @@ export function SendTest({
           </option>
         ))}
       </select>
-      <Button size="sm" onClick={send} disabled={sending || !employeeId}>
+      <Button size="sm" onClick={send} disabled={sending || !userId}>
         <Send className="size-3.5" /> {sending ? "Sending…" : "Send test"}
       </Button>
     </div>

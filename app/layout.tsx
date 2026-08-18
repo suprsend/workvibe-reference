@@ -10,7 +10,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   title: "WorkVibe",
-  description: "Workplace-experience notifications for HR and People teams.",
+  description: "Customer notifications — templates, workflows, broadcasts and per-subscriber preferences.",
 };
 
 export default async function RootLayout({

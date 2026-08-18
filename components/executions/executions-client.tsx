@@ -69,14 +69,14 @@ function ExecutionsBody() {
     };
   }, []);
 
-  // Re-fire a run for the same recipient (recipient id = seed employee id).
+  // Re-fire a run for the same recipient (recipient id = subscriber distinct id).
   const resend = React.useCallback(
     async (m: MessageRecord) => {
       if (!m.workflowSlug || !m.recipientId) return;
       const res = await fetch("/api/trigger", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workflow_slug: m.workflowSlug, employee_id: m.recipientId }),
+        body: JSON.stringify({ workflow_slug: m.workflowSlug, user_id: m.recipientId }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.ok) {

@@ -1,6 +1,6 @@
-// Opt-out analytics — "are employees opting out, and of what?" (mirrors the
+// Opt-out analytics — "are subscribers opting out, and of what?" (mirrors the
 // SuprSend dashboard's opt-out card). There is NO opt-out aggregate API, so we
-// compute it from real preference state: read each LIVE employee's category prefs
+// compute it from real preference state: read each LIVE user's category prefs
 // (hub) and count opt-outs per category + per channel. Reflects exactly what users
 // toggle in User · Preferences.
 import "server-only";
@@ -19,20 +19,20 @@ export interface ChannelOff {
 export interface OptOutRow {
   category: string;
   name: string;
-  userOptOut: number; // employees who ACTIVELY opted out of the category (their choice)
-  defaultOptOut: number; // employees who inherited an off-by-default (never chose)
+  userOptOut: number; // users who ACTIVELY opted out of the category (their choice)
+  defaultOptOut: number; // users who inherited an off-by-default (never chose)
   channelOptOuts: Record<string, ChannelOff>; // channel → muted vs off-by-default counts
 }
 export interface OptOutSummary {
   totalUsers: number;
-  usersOptedOut: number; // distinct employees who ACTIVELY opted out / muted a channel
-  usersDefaultOff: number; // distinct employees off only because of an off-by-default
+  usersOptedOut: number; // distinct users who ACTIVELY opted out / muted a channel
+  usersDefaultOff: number; // distinct users off only because of an off-by-default
   rows: OptOutRow[];
 }
 
 export async function getOptOutSummary(ws: Workspace): Promise<OptOutSummary> {
-  const emps = await listUsers(ws);
-  const perEmployee = await Promise.all(emps.map((e) => getUserCategories(ws, e.distinctId).catch(() => [])));
+  const roster = await listUsers(ws);
+  const perUser = await Promise.all(roster.map((e) => getUserCategories(ws, e.distinctId).catch(() => [])));
 
   // The channels a category normally delivers on (its default opt-in + mandatory
   // set). A channel is only an ACTIVE "mute" if the category normally sends it but
@@ -47,18 +47,18 @@ export async function getOptOutSummary(ws: Workspace): Promise<OptOutSummary> {
   const activeUsers = new Set<string>(); // actively opted out / muted a channel
   const defaultUsers = new Set<string>(); // off only via an off-by-default
 
-  perEmployee.forEach((cats, i) => {
-    const empId = emps[i].distinctId;
+  perUser.forEach((cats, i) => {
+    const userId = roster[i].distinctId;
     for (const c of cats) {
       const row = byCat.get(c.category) ?? { category: c.category, name: c.name, userOptOut: 0, defaultOptOut: 0, channelOptOuts: {} };
       if (c.preference === "opt_out") {
         // original_preference null → never chose → inherited the off-by-default.
         if (c.original_preference == null) {
           row.defaultOptOut += 1;
-          defaultUsers.add(empId);
+          defaultUsers.add(userId);
         } else {
           row.userOptOut += 1;
-          activeUsers.add(empId);
+          activeUsers.add(userId);
         }
       } else {
         // Category is ON for this user — record each channel that's off, split by
@@ -72,7 +72,7 @@ export async function getOptOutSummary(ws: Workspace): Promise<OptOutSummary> {
           const cell = row.channelOptOuts[ch.channel] ?? { muted: 0, byDefault: 0 };
           if (onSet && onSet.has(ch.channel)) {
             cell.muted += 1;
-            activeUsers.add(empId);
+            activeUsers.add(userId);
           } else {
             cell.byDefault += 1;
           }
@@ -86,8 +86,8 @@ export async function getOptOutSummary(ws: Workspace): Promise<OptOutSummary> {
   const rows = [...byCat.values()].sort(
     (a, b) => b.userOptOut - a.userOptOut || b.defaultOptOut - a.defaultOptOut,
   );
-  // An employee counted as "default off" but who also actively opted out elsewhere
+  // A user counted as "default off" but who also actively opted out elsewhere
   // belongs in the active bucket only.
   for (const id of activeUsers) defaultUsers.delete(id);
-  return { totalUsers: emps.length, usersOptedOut: activeUsers.size, usersDefaultOff: defaultUsers.size, rows };
+  return { totalUsers: roster.length, usersOptedOut: activeUsers.size, usersDefaultOff: defaultUsers.size, rows };
 }

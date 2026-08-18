@@ -14,7 +14,7 @@ const InboxMount = dynamic(() => import("@/components/user/inbox-mount"), {
 
 export function InboxClient() {
   const { workspace, actorId } = useWorkspace();
-  // Remount per workspace + impersonated employee so the SDK re-auths cleanly.
+  // Remount per workspace + impersonated user so the SDK re-auths cleanly.
   return <InboxBody key={`${workspace}:${actorId}`} actorId={actorId} />;
 }
 
@@ -42,7 +42,7 @@ function InboxBody({ actorId }: { actorId: string }) {
 
   return (
     <>
-      <PageHeader title="Inbox" description="Your notifications from the People team." />
+      <PageHeader title="Inbox" description="Your notifications from this service." />
       {error ? (
         <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           <AlertCircle className="mt-0.5 size-4 shrink-0" />

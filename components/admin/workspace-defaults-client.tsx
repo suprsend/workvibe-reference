@@ -15,12 +15,12 @@ import { CHANNEL_ICON, CHANNEL_LABEL } from "@/lib/message-display";
 // vendor actually reach users — Email today; Inbox once enabled in SuprSend.)
 const CHANNELS = ["email", "inbox", "slack"];
 
-// Plain-English: what the DEFAULT subscription state is for a new employee, and
+// Plain-English: what the DEFAULT subscription state is for a new user, and
 // whether they're allowed to change it. (SuprSend: opt_in / opt_out / cant_unsubscribe.)
 const PREF_LABEL: Record<Pref, string> = {
-  opt_in: "On by default · employee can turn off",
-  opt_out: "Off by default · employee can turn on",
-  cant_unsubscribe: "Always on · employee can’t turn off",
+  opt_in: "On by default · user can turn off",
+  opt_out: "Off by default · user can turn on",
+  cant_unsubscribe: "Always on · user can’t turn off",
 };
 
 interface Row extends PrefCategory {
@@ -125,7 +125,7 @@ function Body() {
     <>
       <PageHeader
         title="Preference defaults"
-        description="The starting notification settings a new employee gets in this workspace. Changes save automatically."
+        description="The starting notification settings a new user gets in this workspace. Changes save automatically."
         actions={
           rows !== null ? (
             <span className="text-xs text-muted-foreground">{saving ? "Saving…" : savedUp ? "All changes saved" : ""}</span>
@@ -139,8 +139,8 @@ function Body() {
 
       {rows && rows.length > 0 && (
         <div className="rounded-md border border-amber-300/60 bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-          These are <strong>defaults for new employees</strong>. They don’t change someone who already has settings — to stop a
-          notification for a specific employee right now, use <strong>Per-user</strong>. (“Required” is the one setting enforced
+          These are <strong>defaults for new users</strong>. They don’t change someone who already has settings — to stop a
+          notification for a specific user right now, use <strong>Per-user</strong>. (“Required” is the one setting enforced
           for everyone — it can’t be opted out of.)
         </div>
       )}
@@ -187,15 +187,15 @@ function Body() {
                       {r.preference === "opt_out" ? (
                         // SuprSend stores no default channels for an off-by-default
                         // category (verified: opt_out → channels persist as null).
-                        // Channels apply once an employee turns it on, so we don't
+                        // Channels apply once a user turns it on, so we don't
                         // show toggles here — editing them couldn't be saved.
                         <span className="text-xs text-muted-foreground">
-                          Off by default — channels apply once an employee turns this on.
+                          Off by default — channels apply once a user turns this on.
                         </span>
                       ) : (
                         <>
                           <span className="text-xs text-muted-foreground">
-                            {r.preference === "cant_unsubscribe" ? "Mandatory channels" : "Default channels · new hires"}
+                            {r.preference === "cant_unsubscribe" ? "Mandatory channels" : "Default channels · new users"}
                           </span>
                           {CHANNELS.map((ch) => {
                             const Icon = CHANNEL_ICON[ch];

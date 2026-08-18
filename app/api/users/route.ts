@@ -3,12 +3,12 @@ import { errMsg } from "@/lib/server/http";
 import { getActiveWorkspace } from "@/lib/server/workspace";
 import {
   listUsers, upsertUser, removeUser, getUser, getWorkspaceSlackWebhook,
-  addToAllEmployeesList, ONBOARDING_EVENT,
+  addToSubscribersList, ONBOARDING_EVENT,
 } from "@/lib/server/users";
 import { trackEvent } from "@/lib/server/hub";
 import { getWorkflowTriggerData } from "@/lib/suprsend-mgmt";
 
-const ONBOARDING_WORKFLOW = "employee-onboarding";
+const ONBOARDING_WORKFLOW = "subscriber-onboarding";
 
 export async function GET() {
   try {
@@ -20,7 +20,7 @@ export async function GET() {
   }
 }
 
-// Add or update an employee. New employees get a distinct_id slugged from the name.
+// Add or update a user. New users get a distinct_id slugged from the name.
 export async function POST(req: Request) {
   try {
     const ws = await getActiveWorkspace();
@@ -31,32 +31,33 @@ export async function POST(req: Request) {
     if (isCreate) {
       // creating new — require an email so they can actually receive
       if (!email || !/.+@.+\..+/.test(email)) {
-        return NextResponse.json({ ok: false, error: "A valid email is required for a new employee." }, { status: 400 });
+        return NextResponse.json({ ok: false, error: "A valid email is required for a new user." }, { status: 400 });
       }
       if (await getUser(ws, id)) {
-        return NextResponse.json({ ok: false, error: `An employee “${id}” already exists.` }, { status: 409 });
+        return NextResponse.json({ ok: false, error: `A user “${id}” already exists.` }, { status: 409 });
       }
     }
     // Slack is a workspace-level channel (one webhook → one channel for everyone),
-    // so a new employee inherits the workspace's webhook automatically — Slack
-    // delivery + the Slack preference toggle work without per-employee setup.
+    // so a new user inherits the workspace's webhook automatically — Slack
+    // delivery + the Slack preference toggle work without per-user setup.
     const slackIdentity = isCreate ? getWorkspaceSlackWebhook(ws) ?? undefined : undefined;
     await upsertUser(ws, id, { name, email, role, slack: slackIdentity });
 
-    // New hire → add to the company list and emit the onboarding event. The
-    // event-triggered onboarding workflow fires automatically (showcases an
-    // event trigger end-to-end — no manual Send test). Best-effort: a failure
-    // here must not fail the user create, so we don't await-throw it.
+    // New subscriber → add to the all-subscribers list (the broadcast audience)
+    // and emit the onboarding event. The event-triggered onboarding workflow
+    // fires automatically (showcases an event trigger end-to-end — no manual
+    // Send test). Best-effort: a failure here must not fail the user create, so
+    // we don't await-throw it.
     let onboardingFired = false;
     if (isCreate) {
       // Carry the FULL onboarding payload on the event — every variable the
-      // onboarding templates use (link, manager_name, manager_contact, …) pulled
-      // from their sample data, with this hire's real name layered on top. Without
-      // this the welcome email renders with blank merge fields on a live add.
+      // onboarding templates use, pulled from their sample data, with this
+      // subscriber's real name layered on top. Without this the welcome email
+      // renders with blank merge fields on a live add.
       const base = await getWorkflowTriggerData(ws.slug, ONBOARDING_WORKFLOW).catch(() => ({}));
-      const payload = { ...base, employee_name: name ?? id, name: name ?? id, role: role ?? "" };
+      const payload = { ...base, user_name: name ?? id, name: name ?? id, role: role ?? "" };
       await Promise.allSettled([
-        addToAllEmployeesList(ws, id),
+        addToSubscribersList(ws, id),
         trackEvent(ws, id, ONBOARDING_EVENT, payload).then(() => { onboardingFired = true; }),
       ]);
     }

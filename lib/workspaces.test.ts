@@ -8,8 +8,8 @@ import {
 
 describe("getWorkspace", () => {
   it("resolves a known slug", () => {
-    expect(getWorkspace("workvibe-spacex").label).toBe("SpaceX");
-    expect(getWorkspace("workvibe-uber").label).toBe("Uber");
+    expect(getWorkspace("workvibe-northwind").label).toBe("Northwind");
+    expect(getWorkspace("workvibe-loopride").label).toBe("Loopride");
   });
 
   it("falls back to the first workspace for unknown / missing slugs", () => {
@@ -22,8 +22,8 @@ describe("getWorkspace", () => {
 
 describe("isWorkspaceSlug", () => {
   it("is true only for registered slugs", () => {
-    expect(isWorkspaceSlug("workvibe-uber")).toBe(true);
-    expect(isWorkspaceSlug("workvibe-spacex")).toBe(true);
+    expect(isWorkspaceSlug("workvibe-loopride")).toBe(true);
+    expect(isWorkspaceSlug("workvibe-northwind")).toBe(true);
     expect(isWorkspaceSlug("acme")).toBe(false);
     expect(isWorkspaceSlug(null)).toBe(false);
     expect(isWorkspaceSlug(undefined)).toBe(false);

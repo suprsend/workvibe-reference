@@ -91,8 +91,7 @@ export interface TemplateDraft {
 }
 
 // Push email as HTML/raw mode (type:"raw") so the SuprSend editor opens the HTML
-// editor with our content and the preview renders — NOT "designer", which leaves
-// the visual canvas empty (you can't push blocks to the drag-and-drop designer).
+// editor with our content and the preview renders.
 function emailVariantContent(c: EmailContent) {
   return {
     templating_language: "handlebars",
@@ -375,6 +374,15 @@ export async function publishTemplate(
 function isNoChanges(r: MgmtResult): boolean {
   const body = r.body as { error_code?: string } | undefined;
   return r.status === 409 && body?.error_code === "no_changes_to_commit";
+}
+
+/** The template's preview payload — its {{variable}} sample values, or {} if unset. */
+export async function getTemplateSampleData(
+  ws: WorkspaceSlug,
+  slug: string,
+): Promise<Record<string, string>> {
+  const mock = await call<MockDataBody>(ws, "v2", `template/${slug}/mock_data/`);
+  return mock.ok ? (mock.body.data?.payload ?? {}) : {};
 }
 
 /** Set the template's preview payload (the {{variable}} sample values). */
