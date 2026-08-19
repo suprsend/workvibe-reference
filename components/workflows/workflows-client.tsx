@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Workflow as WorkflowIcon, Zap, Tag, Send, MousePointerClick, BellRing, Pencil } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Workflow as WorkflowIcon, Zap, Tag, Send, MousePointerClick, BellRing, SquareArrowOutUpRight } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspace } from "@/components/providers";
 import { PageHeader } from "@/components/shared/page-header";
@@ -127,18 +121,15 @@ function WorkflowsBody() {
                     {w.last_executed_at ? timeAgo(w.last_executed_at) : "—"}
                   </span>
                   <div className="flex items-center justify-end gap-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" title="Edit" aria-label="Edit">
-                          <Pencil className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => setDetailSlug(w.slug)}>
-                          <WorkflowIcon className="size-4" /> Open flow
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Open flow"
+                      aria-label={`Open ${w.name} flow`}
+                      onClick={() => setDetailSlug(w.slug)}
+                    >
+                      <SquareArrowOutUpRight className="size-4" />
+                    </Button>
                     <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setTestWf({ slug: w.slug, name: w.name })}>
                       <Send className="size-3.5" /> Send test
                     </Button>

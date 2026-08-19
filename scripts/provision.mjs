@@ -312,6 +312,33 @@ async function publishCategories(ws, rootCategories) {
   return isNoChanges(r) ? { ok: true, status: 200, body: { status: "active" } } : r;
 }
 
+/** Does any category in this tree offer the inbox channel? */
+function usesInbox(rootCategories) {
+  return JSON.stringify(rootCategories ?? []).includes('"inbox"');
+}
+
+/**
+ * Show the Inbox channel in the subscriber preference centre.
+ *
+ * A category listing `inbox` in `default_opt_in_channels` is NOT enough: until this
+ * workspace-level flag is on, `hub/v2/subscriber/{id}/category/` returns email only
+ * — for every category and every subscriber, including ones already receiving inbox
+ * messages. Nothing surfaces the gap; the channel is simply missing from the
+ * preference centre with no error. Setting it here means no dashboard step to deploy.
+ *
+ * Note the path shape: `/v1/workspace/{ws}/config/`, NOT `/v1/{ws}/config/` like
+ * every other management endpoint — which is why this can't use `call()`.
+ * (The API reference documents the latter; the former is what actually resolves.)
+ */
+async function enableInboxPreferences(ws) {
+  const res = await fetch(`${MGMNT}/v1/workspace/${ws}/config/`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: JSON.stringify({ user_inbox_preference_enabled: true }),
+  });
+  return { ok: res.ok, status: res.status };
+}
+
 // ── Stage: categories ──────────────────────────────────────────────────────────
 async function cmdCategories() {
   const data = readJson("seed-data/categories.json");
@@ -320,6 +347,13 @@ async function cmdCategories() {
     console.log(`\n=== ${ws} ===`);
     const r = await publishCategories(ws, rootCategories);
     console.log(`  ${r.ok ? "✓" : "✗"} preference categories HTTP ${r.status}${r.ok ? "" : " " + JSON.stringify(r.body).slice(0, 200)}`);
+
+    // Only when this workspace's categories actually offer inbox — don't flip a
+    // workspace flag the seed gives no reason to set.
+    if (usesInbox(rootCategories)) {
+      const c = await enableInboxPreferences(ws);
+      console.log(`  ${c.ok ? "✓" : "✗"} inbox shown in preference centre HTTP ${c.status}`);
+    }
   }
 }
 
@@ -402,13 +436,62 @@ async function cmdWorkflows() {
 const SUBSCRIBERS_LIST = "all-subscribers";
 const ONBOARDING_EVENT = "subscriber_onboarded";
 
+// create() is an upsert, so this both creates the list and keeps its settings correct on
+// re-runs. `track_user_entry` is what makes SuprSend emit `$USER_ENTERED_LIST - <list_id>`;
+// without it the list-entry workflow can never fire, and nothing surfaces that — the list
+// simply sits there. Setting it here means no dashboard step to deploy this app.
 async function ensureList(client) {
-  try {
-    await client.subscriber_lists.get(SUBSCRIBERS_LIST);
-  } catch {
-    await client.subscriber_lists
-      .create({ list_id: SUBSCRIBERS_LIST, list_name: "All subscribers", list_description: "Every consumer in this workspace — the broadcast audience." })
-      .catch(() => {});
+  await client.subscriber_lists
+    .create({
+      list_id: SUBSCRIBERS_LIST,
+      list_name: "All subscribers",
+      list_description: "Every consumer in this workspace — the broadcast audience.",
+      track_user_entry: true,
+    })
+    .catch(() => {});
+}
+
+// The data the onboarding event must carry — taken from the template its workflow sends,
+// so the event and the template can never drift apart.
+function onboardingData(ws) {
+  const wfs = readJson("seed-data/workflows.json")[ws] ?? [];
+  const tpls = readJson("seed-data/templates.json")[ws] ?? [];
+  const wf = wfs.find((w) => (w.trigger_events ?? []).includes(ONBOARDING_EVENT.toUpperCase()));
+  const slugs = (wf?.tree?.nodes ?? []).map((n) => n.properties?.template).filter(Boolean);
+  return Object.assign({}, ...slugs.map((s) => tpls.find((t) => t.slug === s)?.sampleData ?? {}));
+}
+
+// ── Stage: brand ───────────────────────────────────────────────────────────────
+// Seed each workspace's `default` tenant — the brand templates resolve through
+// {{$brand.*}}. Left unseeded, the tenant keeps the name the SuprSend ACCOUNT was
+// created with, so every customer's mail is signed by the notification vendor
+// rather than the customer. Runs before `templates` for that reason.
+// Upsert merges, so fields the seed omits (logo, social links) keep whatever the
+// admin set in Brand Settings.
+async function cmdBrand() {
+  const { Suprsend } = await import("@suprsend/node-sdk");
+  const brands = readJson("seed-data/brands.json");
+
+  for (const { slug } of readWorkspaces()) {
+    const p = envPrefix(slug);
+    const key = process.env[`${p}_WORKSPACE_KEY`];
+    const secret = process.env[`${p}_WORKSPACE_SECRET`];
+    console.log(`\n=== ${slug} ===`);
+    if (!key || !secret) {
+      console.log(`  ✗ ${p}_WORKSPACE_KEY / _WORKSPACE_SECRET not set — paste them from the dashboard first`);
+      continue;
+    }
+    const brand = brands[slug];
+    if (!brand) {
+      console.log("  – no brand seeded for this workspace");
+      continue;
+    }
+    try {
+      await new Suprsend(key, secret).tenants.upsert("default", brand);
+      console.log(`  ✓ brand → ${brand.tenant_name}`);
+    } catch (e) {
+      console.log(`  ✗ ${e?.message ?? e}`);
+    }
   }
 }
 
@@ -454,7 +537,12 @@ async function cmdUsers() {
         await client.subscriber_lists.add(SUBSCRIBERS_LIST, [id]).catch(() => {});
 
         if (!existed) {
-          await client.track_event(new SuprsendEvent(id, ONBOARDING_EVENT, {}, { tenant_id: "default" }));
+          // Carry the welcome template's own sample data. An empty payload renders the
+          // welcome message with blank variables — SuprSend fails the email outright with
+          // "missing variables in template".
+          await client.track_event(
+            new SuprsendEvent(id, ONBOARDING_EVENT, onboardingData(slug), { tenant_id: "default" }),
+          );
         }
         const note = existed ? "updated" : "created + onboarding event";
         const preview = id === PREVIEW_RECIPIENT ? "  (template preview recipient)" : "";
@@ -470,13 +558,14 @@ async function main() {
   if (!TOKEN) die("SUPRSEND_SERVICE_TOKEN is not set (run with --env-file=.env.local).");
   const stage = process.argv[2];
   if (stage === "workspaces") await cmdWorkspaces();
+  else if (stage === "brand") await cmdBrand();
   else if (stage === "categories") await cmdCategories();
   else if (stage === "templates") await cmdTemplates();
   else if (stage === "workflows") await cmdWorkflows();
   else if (stage === "users") await cmdUsers();
-  else if (stage === "all") { await cmdWorkspaces(); await cmdCategories(); await cmdTemplates(); await cmdWorkflows(); await cmdUsers(); }
+  else if (stage === "all") { await cmdWorkspaces(); await cmdBrand(); await cmdCategories(); await cmdTemplates(); await cmdWorkflows(); await cmdUsers(); }
   else {
-    console.log("Usage: node --env-file=.env.local scripts/provision.mjs <workspaces|categories|templates|workflows|users|all>");
+    console.log("Usage: node --env-file=.env.local scripts/provision.mjs <workspaces|brand|categories|templates|workflows|users|all>");
     process.exit(stage ? 1 : 0);
   }
 }

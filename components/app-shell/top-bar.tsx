@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { ViewSwitcher } from "./view-switcher";
 import { ViewingAs } from "./viewing-as";
@@ -21,12 +20,7 @@ export function TopBar() {
         <ViewSwitcher />
       </div>
 
-      <div className="ml-auto flex items-center gap-3">
-        {isUser && <ViewingAs />}
-        <Avatar className="size-8">
-          <AvatarFallback className="bg-muted text-xs">YM</AvatarFallback>
-        </Avatar>
-      </div>
+      <div className="ml-auto flex items-center gap-3">{isUser && <ViewingAs />}</div>
     </header>
   );
 }

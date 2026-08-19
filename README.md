@@ -102,7 +102,7 @@ https://app.suprsend.com/en/<workspace-slug>/developers/api-keys
 
 The `<workspace-slug>` in that URL can differ per account — copy it from your browser's address bar when viewing the workspace.
 
-**7. Seed the content.** WorkVibe ships with a working set of preference categories, templates, and workflows for each demo workspace — trip updates, receipts and ride offers for Loopride; outage, billing and equipment notifications plus product news for Northwind. This publishes all of it into your freshly-created workspaces, in the required order:
+**7. Seed the content.** WorkVibe ships with a working set of branding, preference categories, templates, workflows and demo subscribers for each demo workspace — trip updates, receipts and ride offers for Loopride; outage, billing and equipment notifications plus product news for Northwind. This publishes all of it into your freshly-created workspaces, in the required order:
 
 ```bash
 node --env-file=.env.local scripts/provision.mjs all
@@ -169,10 +169,12 @@ Workspaces are declared in `lib/workspaces.ts`. Add an entry there, re-run the p
 | `npm run typecheck` | Type-check with `tsc --noEmit` |
 | `npm test` | Run the unit tests (Vitest) |
 | `node --env-file=.env.local scripts/provision.mjs workspaces` | Create/reuse workspaces and scaffold their env lines |
+| `node --env-file=.env.local scripts/provision.mjs brand` | Set each workspace's tenant brand (`scripts/seed-data/brands.json`) — run before `templates`, which render `{{$brand.*}}` |
 | `node --env-file=.env.local scripts/provision.mjs categories` | Publish the seed preference categories (`scripts/seed-data/categories.json`) — must run before `workflows` |
 | `node --env-file=.env.local scripts/provision.mjs templates` | Publish the seed templates (`scripts/seed-data/templates.json`) |
 | `node --env-file=.env.local scripts/provision.mjs workflows` | Publish the seed workflows (`scripts/seed-data/workflows.json`) |
-| `node --env-file=.env.local scripts/provision.mjs all` | Run all four stages above, in order |
+| `node --env-file=.env.local scripts/provision.mjs users` | Seed the demo subscribers (`scripts/seed-data/users.json`) and fire onboarding for each newly created one |
+| `node --env-file=.env.local scripts/provision.mjs all` | Run every stage above, in order |
 
 ---
 

@@ -238,7 +238,7 @@
            "target": "{{target}}"
           },
           "values": {
-           "href": "{{cta_url}}",
+           "href": "{{app_url}}",
            "target": "_blank"
           }
          },
