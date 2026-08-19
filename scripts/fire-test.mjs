@@ -12,8 +12,13 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const die = (m) => { console.error(`✗ ${m}`); process.exit(1); };
 
-const [ws, slug, who = "preview-user"] = process.argv.slice(2);
+const [ws, slug, whoArg] = process.argv.slice(2);
 if (!ws || !slug) die("usage: fire-test.mjs <workspace> <workflow-slug> [distinct_id]");
+
+// Default to the workspace's first seeded subscriber rather than a fixed id, so
+// this keeps working when the roster changes.
+const who = whoArg || (JSON.parse(readFileSync(resolve(HERE, "seed-data/users.json"), "utf8"))[ws] || [])[0]?.distinct_id;
+if (!who) die(`no subscriber to send to — pass a distinct_id, or seed users for ${ws}`);
 
 const wfs = JSON.parse(readFileSync(resolve(HERE, "seed-data/workflows.json"), "utf8"))[ws] || [];
 const tpls = JSON.parse(readFileSync(resolve(HERE, "seed-data/templates.json"), "utf8"))[ws] || [];

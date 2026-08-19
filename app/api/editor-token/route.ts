@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/server/http";
 import jwt from "jsonwebtoken";
 import { getActiveWorkspace, getWorkspaceSecrets } from "@/lib/server/workspace";
+import { listUsers } from "@/lib/server/users";
 
 // ES256-signed JWT for @suprsend/react-editor (accessToken prop), per active workspace.
 // No tenant variants in WorkVibe → variant_scope is empty (master variant).
@@ -9,7 +10,15 @@ export async function GET(req: Request) {
   try {
     const ws = await getActiveWorkspace();
     const { workspaceKey, signingKeyUid, signingKeyB64 } = getWorkspaceSecrets(ws);
-    const recipient = new URL(req.url).searchParams.get("recipient") || "preview-user";
+    // Scope the token to a real subscriber so the editor can resolve {{$recipient.*}}.
+    // Falls back to the workspace's first subscriber rather than a fixed demo id —
+    // the roster is the source of truth, and a stale hardcoded id would silently
+    // break every preview.
+    const asked = new URL(req.url).searchParams.get("recipient");
+    const recipient = asked || (await listUsers(ws))[0]?.distinctId;
+    if (!recipient) {
+      return NextResponse.json({ error: "This workspace has no subscribers to preview as." }, { status: 400 });
+    }
 
     const privateKey = Buffer.from(signingKeyB64, "base64").toString("utf-8");
     const now = Math.floor(Date.now() / 1000);
