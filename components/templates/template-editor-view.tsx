@@ -23,8 +23,15 @@ export function TemplateEditorView({
   channels: string[];
   name: string;
 }) {
-  const { workspace } = useWorkspace();
+  const { workspace, users, usersLoading } = useWorkspace();
   const accent = getWorkspace(workspace).accent;
+  // Who the preview renders as. The editor resolves {{$recipient.*}} against a real
+  // subscriber, so this is the live roster, not a fixed demo id. Admin screens have
+  // no "Viewing as" — that's a User-view control — so the choice belongs here.
+  // Derived, not stored in an effect: the pick if still valid, else the first
+  // subscriber (which is also what every template's mock_data points at).
+  const [picked, setPicked] = React.useState("");
+  const recipient = users.some((u) => u.distinctId === picked) ? picked : users[0]?.distinctId ?? "";
   const [token, setToken] = React.useState<{ accessToken: string; workspaceUid: string } | null>(null);
   // Live channel set — re-fetched client-side (no-store) so a channel added moments
   // ago (e.g. via a workflow edit) always appears as a tab, never a stale payload.
@@ -33,10 +40,11 @@ export function TemplateEditorView({
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    if (!recipient) return; // roster still loading — nothing to scope the token to
     let active = true;
     (async () => {
       try {
-        const res = await fetch("/api/editor-token");
+        const res = await fetch(`/api/editor-token?recipient=${encodeURIComponent(recipient)}`);
         const d = await res.json();
         if (!active) return;
         if (d.accessToken) setToken({ accessToken: d.accessToken, workspaceUid: d.workspaceUid });
@@ -48,7 +56,7 @@ export function TemplateEditorView({
     return () => {
       active = false;
     };
-  }, [workspace]);
+  }, [workspace, recipient]);
 
   React.useEffect(() => {
     let active = true;
@@ -82,6 +90,23 @@ export function TemplateEditorView({
         <span className="text-muted-foreground">/</span>
         <span className="font-medium">{name}</span>
         <code className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{slug}</code>
+
+        {users.length > 0 && (
+          <label className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+            Preview as
+            <select
+              value={recipient}
+              onChange={(e) => setPicked(e.target.value)}
+              className="rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+            >
+              {users.map((u) => (
+                <option key={u.distinctId} value={u.distinctId}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="min-h-[78vh] flex-1 overflow-hidden rounded-lg border border-border">
@@ -92,19 +117,19 @@ export function TemplateEditorView({
               <span>{error}</span>
             </div>
           </div>
-        ) : !token ? (
+        ) : !token || usersLoading ? (
           <div className="space-y-3 p-6">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-72 w-full" />
           </div>
         ) : (
           <EditorMount
-            key={editorChannels.join(",")}
+            key={`${recipient}:${editorChannels.join(",")}`}
             workspaceUid={token.workspaceUid}
             slug={slug}
             channels={editorChannels}
             accessToken={token.accessToken}
-            recipient="preview-user"
+            recipient={recipient}
             primary={accent}
           />
         )}

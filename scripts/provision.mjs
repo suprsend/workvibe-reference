@@ -255,9 +255,13 @@ const CHANNEL_CONTENT = {
   slack: (d) => (d.slack && d.slack.blocks?.length ? slackVariantContent(d.slack) : null),
 };
 
-// The distinct_id the editor preview renders against. It must be a real user in
-// the workspace — `provision.mjs users` creates it.
-const PREVIEW_RECIPIENT = "preview-user";
+// The distinct_id the editor preview renders against: the FIRST subscriber seeded
+// for that workspace. It must be a real user — `provision.mjs users` creates it —
+// and it's derived rather than named so the roster stays the single source of
+// truth and every id keeps the same `u_xxxxx` shape a real signup would have.
+function previewRecipient(ws) {
+  return (readJson("seed-data/users.json")[ws] ?? [])[0]?.distinct_id ?? null;
+}
 
 // Preview/test payload. `payload` alone is not enough: without an explicit
 // recipient the preview has no $recipient object, so every {{$recipient.*}} in
@@ -266,7 +270,7 @@ const PREVIEW_RECIPIENT = "preview-user";
 async function setMockData(ws, slug, sample) {
   const data = {
     payload: sample && Object.keys(sample).length ? sample : {},
-    recipient_distinct_id: PREVIEW_RECIPIENT,
+    recipient_distinct_id: previewRecipient(ws),
     recipient_sub_type: "user",
     tenant_id: "default",
   };
@@ -545,7 +549,7 @@ async function cmdUsers() {
           );
         }
         const note = existed ? "updated" : "created + onboarding event";
-        const preview = id === PREVIEW_RECIPIENT ? "  (template preview recipient)" : "";
+        const preview = id === previewRecipient(slug) ? "  (template preview recipient)" : "";
         console.log(`  ✓ ${id.padEnd(14)} ${(name ?? "").padEnd(14)} ${note}${preview}`);
       } catch (e) {
         console.log(`  ✗ ${id}: ${e?.message ?? e}`);

@@ -2,14 +2,14 @@
   "_comment": "Demo consumers per workspace. These stand in for people who signed up in the CUSTOMER's own product — Loopride's app, Northwind's checkout — not people an admin typed into WorkVibe. `provision.mjs users` upserts them and, for each one it had to create, emits SUBSCRIBER_ONBOARDED so the onboarding workflow fires exactly once, the way a real signup would. Re-running never re-sends. The first entry in each list is the preview recipient every template's mock_data points at; keep it. All addresses are @example.com (IANA-reserved, cannot receive mail).",
 
   "workvibe-loopride": [
-    { "distinct_id": "preview-user", "name": "Sam Rivera", "email": "preview@example.com" },
+    { "distinct_id": "u_20388", "name": "Sam Rivera", "email": "sam@example.com" },
     { "distinct_id": "u_20431", "name": "Aisha Khan", "email": "aisha@example.com" },
     { "distinct_id": "u_20518", "name": "Diego Santos", "email": "diego@example.com" },
     { "distinct_id": "u_20677", "name": "Mei Lin", "email": "mei@example.com" }
   ],
 
   "workvibe-northwind": [
-    { "distinct_id": "preview-user", "name": "Sam Rivera", "email": "preview@example.com" },
+    { "distinct_id": "u_51166", "name": "Sam Rivera", "email": "sam@example.com" },
     { "distinct_id": "u_51204", "name": "Tom Fletcher", "email": "tom@example.com" },
     { "distinct_id": "u_51339", "name": "Priya Nair", "email": "priya@example.com" },
     { "distinct_id": "u_51482", "name": "Jonas Weber", "email": "jonas@example.com" }
