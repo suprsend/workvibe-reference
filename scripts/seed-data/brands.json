@@ -1,0 +1,17 @@
+{
+  "_comment": "Each workspace's SuprSend `default` tenant — the brand every template resolves through {{$brand.*}}. Without this the tenant keeps whatever name the SuprSend account was created with, so every customer's email is signed by the notification vendor instead of the customer. The whole point of one workspace per customer is that Loopride's mail says Loopride and Northwind's says Northwind. Colours match each workspace's accent in lib/workspaces.ts so the app chrome and the email agree; edit any of it in Admin → Brand Settings, which writes back to the same tenant.",
+
+  "workvibe-loopride": {
+    "tenant_name": "Loopride",
+    "primary_color": "#0E9F6E",
+    "secondary_color": "#0B7A55",
+    "tertiary_color": "#F59E0B"
+  },
+
+  "workvibe-northwind": {
+    "tenant_name": "Northwind",
+    "primary_color": "#1B4E8C",
+    "secondary_color": "#143A66",
+    "tertiary_color": "#E07A1F"
+  }
+}

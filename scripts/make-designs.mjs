@@ -30,20 +30,27 @@ const baseJsonRaw = readFileSync(resolve(BASE, "body.designer.json"), "utf8");
 const baseJson = JSON.parse(baseJsonRaw);
 
 // Locate the two copy blocks in the base tree, and the button block's label.
-let baseHeading, baseParagraph, baseButton;
+let baseHeading, baseParagraph, baseButton, baseHref;
 for (const row of baseJson.body.rows) {
   for (const col of row.columns ?? []) {
     for (const c of col.contents ?? []) {
       const v = c.values ?? {};
       if (c.type === "heading" && typeof v.text === "string") baseHeading = v.text;
       if (c.type === "paragraph" && typeof v.text === "string") baseParagraph = v.text;
-      if (c.slug === "brand_block" && v.blockType === "brand_button" && v.buttonText) baseButton = v.buttonText;
+      if (c.slug === "brand_block" && v.blockType === "brand_button" && v.buttonText) {
+        baseButton = v.buttonText;
+        // The button's link lives separately from its label. Swapping only the label
+        // leaves every cloned design pointing at the base's {{cta_url}} — which only the
+        // base template supplies, so email rendering fails with "missing variables".
+        baseHref = v.actionType?.values?.href;
+      }
     }
   }
 }
 if (!baseHeading) die("no heading block in the base design");
 if (!baseParagraph) die("no paragraph block in the base design");
 if (!baseButton) die("no brand_button block in the base design");
+if (!baseHref) die("no button href in the base design");
 
 // Rebuild the base's markup shape around new copy, so the swap is a like-for-like
 // string replace in both files.
@@ -71,6 +78,7 @@ for (const [ws, list] of Object.entries(templates)) {
     const newHeading = unescapeVars(headingMarkup(t.heading));
     const newParagraph = unescapeVars(paragraphMarkup(t.paragraph));
     const newButton = t.button?.text ?? baseButton;
+    const newHref = t.button?.url ?? baseHref;
 
     let html = baseHtml;
     let json = baseJsonRaw;
@@ -78,6 +86,7 @@ for (const [ws, list] of Object.entries(templates)) {
       [baseHeading, newHeading],
       [baseParagraph, newParagraph],
       [baseButton, newButton],
+      [baseHref, newHref],
     ]) {
       const jsonFrom = JSON.stringify(from).slice(1, -1);
       const jsonTo = JSON.stringify(to).slice(1, -1);

@@ -1,5 +1,5 @@
 {
-  "_comment": "Workflows per workspace. `category` must match a slug in categories.json — seed categories first or publishing 400s. Loopride runs 4 workflows, Northwind 5: the counts and the triggers differ on purpose. Promotional sends are NOT workflows — they go out as a broadcast to the all-subscribers list (see lib/server/hub.ts), which is why `offers-and-promos` and `product-news` have no workflow here.",
+  "_comment": "Workflows per workspace. `category` must match a slug in categories.json — seed categories first or publishing 400s. Loopride runs 6 workflows, Northwind 7: the counts and the triggers differ on purpose. Promotional sends are NOT workflows — they go out as a broadcast to the all-subscribers list (see lib/server/hub.ts), which is why `offers-and-promos` and `product-news` have no workflow here. `list-welcome` uses a List entry trigger on all-subscribers — deliberately not the same thing as broadcasting to that list: the trigger runs the workflow once per user as they join, a broadcast sends one template to everyone at once.",
 
   "workvibe-loopride": [
     {
@@ -82,6 +82,23 @@
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
             "properties": { "template": "local-service-update", "success": "seen", "success_is_event": false }
+          }
+        ]
+      }
+    },
+    {
+      "slug": "list-welcome",
+      "name": "List Welcome",
+      "description": "Fires when a consumer joins the all-subscribers list. SuprSend emits $USER_ENTERED_LIST once the list has track_user_entry on — one run per user joining, unlike a broadcast to the same list which sends once to everyone.",
+      "category": "getting-started",
+      "trigger_type": "event",
+      "trigger_events": ["$USER_ENTERED_LIST - all-subscribers"],
+      "tree": {
+        "nodes": [
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "welcome-rider", "success": "seen", "success_is_event": false }
           }
         ]
       }
@@ -197,6 +214,23 @@
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
             "properties": { "template": "sign-in-alert", "success": "seen", "success_is_event": false }
+          }
+        ]
+      }
+    },
+    {
+      "slug": "list-welcome",
+      "name": "List Welcome",
+      "description": "Fires when a consumer joins the all-subscribers list. SuprSend emits $USER_ENTERED_LIST once the list has track_user_entry on — one run per user joining, unlike a broadcast to the same list which sends once to everyone.",
+      "category": "getting-started",
+      "trigger_type": "event",
+      "trigger_events": ["$USER_ENTERED_LIST - all-subscribers"],
+      "tree": {
+        "nodes": [
+          {
+            "node_type": "send_multi_channel",
+            "name": "Multi-Channel",
+            "properties": { "template": "welcome-subscriber", "success": "seen", "success_is_event": false }
           }
         ]
       }
