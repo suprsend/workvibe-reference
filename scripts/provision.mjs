@@ -426,9 +426,10 @@ async function cmdWorkflows() {
 // ── Stage: users ──────────────────────────────────────────────────────────────
 // Seeds the demo consumers. These stand in for people who signed up in the
 // CUSTOMER's own product, so this stage — not an admin typing into WorkVibe — is
-// where a consumer enters the system. For each user it has to CREATE it emits
-// SUBSCRIBER_ONBOARDED, which is what fires the onboarding workflow; users that
-// already exist are updated silently, so re-running never re-sends a welcome.
+// where a consumer enters the system. Each one is added to the all-subscribers
+// list, and joining that list is what welcomes them: SuprSend emits
+// $USER_ENTERED_LIST and the onboarding workflow runs. An existing member does not
+// re-enter, so re-running never re-sends a welcome.
 //
 // The first entry is the preview recipient every template's mock_data points at.
 // Without it the editor preview has no $recipient and every {{$recipient.*}}
@@ -438,7 +439,6 @@ async function cmdWorkflows() {
 // user ingestion is SDK-only, so it needs the per-workspace WORKSPACE_KEY/SECRET
 // (the Service Token alone can't do it).
 const SUBSCRIBERS_LIST = "all-subscribers";
-const ONBOARDING_EVENT = "subscriber_onboarded";
 
 // create() is an upsert, so this both creates the list and keeps its settings correct on
 // re-runs. `track_user_entry` is what makes SuprSend emit `$USER_ENTERED_LIST - <list_id>`;
@@ -455,52 +455,8 @@ async function ensureList(client) {
     .catch(() => {});
 }
 
-// The data the onboarding event must carry — taken from the template its workflow sends,
-// so the event and the template can never drift apart.
-function onboardingData(ws) {
-  const wfs = readJson("seed-data/workflows.json")[ws] ?? [];
-  const tpls = readJson("seed-data/templates.json")[ws] ?? [];
-  const wf = wfs.find((w) => (w.trigger_events ?? []).includes(ONBOARDING_EVENT.toUpperCase()));
-  const slugs = (wf?.tree?.nodes ?? []).map((n) => n.properties?.template).filter(Boolean);
-  return Object.assign({}, ...slugs.map((s) => tpls.find((t) => t.slug === s)?.sampleData ?? {}));
-}
-
-// ── Stage: brand ───────────────────────────────────────────────────────────────
-// Seed each workspace's `default` tenant — the brand templates resolve through
-// {{$brand.*}}. Left unseeded, the tenant keeps the name the SuprSend ACCOUNT was
-// created with, so every customer's mail is signed by the notification vendor
-// rather than the customer. Runs before `templates` for that reason.
-// Upsert merges, so fields the seed omits (logo, social links) keep whatever the
-// admin set in Brand Settings.
-async function cmdBrand() {
-  const { Suprsend } = await import("@suprsend/node-sdk");
-  const brands = readJson("seed-data/brands.json");
-
-  for (const { slug } of readWorkspaces()) {
-    const p = envPrefix(slug);
-    const key = process.env[`${p}_WORKSPACE_KEY`];
-    const secret = process.env[`${p}_WORKSPACE_SECRET`];
-    console.log(`\n=== ${slug} ===`);
-    if (!key || !secret) {
-      console.log(`  ✗ ${p}_WORKSPACE_KEY / _WORKSPACE_SECRET not set — paste them from the dashboard first`);
-      continue;
-    }
-    const brand = brands[slug];
-    if (!brand) {
-      console.log("  – no brand seeded for this workspace");
-      continue;
-    }
-    try {
-      await new Suprsend(key, secret).tenants.upsert("default", brand);
-      console.log(`  ✓ brand → ${brand.tenant_name}`);
-    } catch (e) {
-      console.log(`  ✗ ${e?.message ?? e}`);
-    }
-  }
-}
-
 async function cmdUsers() {
-  const { Suprsend, Event: SuprsendEvent } = await import("@suprsend/node-sdk");
+  const { Suprsend } = await import("@suprsend/node-sdk");
   const roster = readJson("seed-data/users.json");
 
   for (const { slug } of readWorkspaces()) {
@@ -524,8 +480,6 @@ async function cmdUsers() {
     for (const person of people) {
       const { distinct_id: id, name, email } = person;
       try {
-        // A signup happens once. Only a user we actually had to create gets the
-        // onboarding event, so re-provisioning doesn't re-send welcome messages.
         let existed = false;
         try {
           const u = await client.users.get(id);
@@ -538,17 +492,12 @@ async function cmdUsers() {
         if (email) edit.add_email(email);
         if (name) edit.set({ name });
         await client.users.edit(edit);
+        // Joining the list IS the signup moment: SuprSend emits $USER_ENTERED_LIST and
+        // the welcome workflow runs. Re-provisioning is safe — an existing member does
+        // not re-enter, so nobody is welcomed twice.
         await client.subscriber_lists.add(SUBSCRIBERS_LIST, [id]).catch(() => {});
 
-        if (!existed) {
-          // Carry the welcome template's own sample data. An empty payload renders the
-          // welcome message with blank variables — SuprSend fails the email outright with
-          // "missing variables in template".
-          await client.track_event(
-            new SuprsendEvent(id, ONBOARDING_EVENT, onboardingData(slug), { tenant_id: "default" }),
-          );
-        }
-        const note = existed ? "updated" : "created + onboarding event";
+        const note = existed ? "updated" : "created + added to list";
         const preview = id === previewRecipient(slug) ? "  (template preview recipient)" : "";
         console.log(`  ✓ ${id.padEnd(14)} ${(name ?? "").padEnd(14)} ${note}${preview}`);
       } catch (e) {

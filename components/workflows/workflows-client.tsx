@@ -162,7 +162,7 @@ function WorkflowsBody() {
 // How each workflow is triggered — the badge makes the trigger mechanism scannable.
 const TRIGGERS: Record<string, { label: string; icon: typeof Zap; hint: string }> = {
   api: { label: "API", icon: MousePointerClick, hint: "Triggered on demand — Send test, Resend, or a backend API call." },
-  event: { label: "Event", icon: BellRing, hint: "Fires automatically when an event is tracked — e.g. adding a subscriber emits subscriber_onboarded and this workflow sends their onboarding." },
+  event: { label: "Event", icon: BellRing, hint: "Fires automatically when an event is tracked — either an event the app emits, like driver_arriving, or one SuprSend emits itself, like a consumer entering a subscriber list." },
 };
 
 function TriggerBadge({ type }: { type?: string }) {

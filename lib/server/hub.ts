@@ -34,8 +34,8 @@ export async function triggerWorkflow(
 /**
  * Track an event for a user. Any workflow whose `trigger_events` includes this
  * event name fires automatically with this user as the recipient — no direct
- * workflow trigger. This is how "add a subscriber → onboarding auto-sends" works:
- * we emit `subscriber_onboarded` and the event-triggered onboarding workflow runs.
+ * workflow trigger. This is how "the driver is close → a nudge goes out" works:
+ * we emit `driver_arriving` and the event-triggered workflow runs.
  * SuprSend upper-cases event names on ingestion (we author the same way).
  */
 export async function trackEvent(

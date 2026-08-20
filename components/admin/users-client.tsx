@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { Users, Trash2, Mail, Bell, BadgeCheck } from "lucide-react";
+import { Users, Trash2, Mail, Bell, BadgeCheck, UserPlus } from "lucide-react";
 import type { WorkUser } from "@/lib/server/users";
 import type { MessageRecord } from "@/lib/server/messages";
 import { useWorkspace } from "@/components/providers";
@@ -11,6 +11,15 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { PreferenceCenter } from "@/components/preferences/preference-center";
 import { activityBadge, CHANNEL_ICON, CHANNEL_LABEL, timeAgo } from "@/lib/message-display";
 
@@ -24,6 +33,7 @@ function Body() {
   const [users, setUsers] = React.useState<WorkUser[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [selected, setSelected] = React.useState<string | null>(null);
+  const [adding, setAdding] = React.useState(false);
 
   const load = React.useCallback(async (keep?: string) => {
     try {
@@ -82,14 +92,30 @@ function Body() {
     }
   }
 
+  async function added(u: WorkUser) {
+    setAdding(false);
+    toast.success("Subscriber added", {
+      description: `${u.name} — onboarding sent, and added to the broadcast list.`,
+    });
+    load(u.distinctId);
+    refreshUsers();
+  }
+
   const current = users?.find((u) => u.distinctId === selected) ?? null;
 
   return (
     <>
-      <PageHeader
-        title="Users"
-        description="Everyone subscribed in this workspace — their contact, role, notification preferences, and what they’ve been sent. Subscribers sign up in the customer’s own product; this roster is read-only apart from edits and removal."
-      />
+      <div className="flex items-start justify-between gap-4">
+        <PageHeader
+          title="Users"
+          description="Everyone subscribed in this workspace — their contact, notification preferences, and what they’ve been sent. Real subscribers sign up in the customer’s own product; Add subscriber is here so you can exercise onboarding and list entry without a provisioning run."
+        />
+        <Button variant="outline" size="sm" className="mt-1 shrink-0 gap-1.5" onClick={() => setAdding(true)}>
+          <UserPlus className="size-4" /> Add subscriber
+        </Button>
+      </div>
+
+      <AddSubscriberDialog key={adding ? "open" : "closed"} open={adding} onOpenChange={setAdding} onAdded={added} />
 
       {error && (
         <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>
@@ -227,5 +253,91 @@ function DeliveryLog({ distinctId }: { distinctId: string }) {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Add a subscriber — the same three steps a real signup performs: create the
+ * profile, join the broadcast list, emit the onboarding event. Both the welcome
+ * and the list-entry workflow fire from it, which is the point: it's the one
+ * action that exercises both paths.
+ */
+function AddSubscriberDialog({
+  open,
+  onOpenChange,
+  onAdded,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onAdded: (u: WorkUser) => void;
+}) {
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [distinctId, setDistinctId] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+
+  async function submit() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, distinct_id: distinctId.trim() || undefined }),
+      });
+      const d = await res.json();
+      if (d.ok) onAdded(d.user as WorkUser);
+      else toast.error("Couldn’t add subscriber", { description: d.error });
+    } catch {
+      toast.error("Couldn’t reach SuprSend.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add subscriber</DialogTitle>
+          <DialogDescription>
+            Sends their onboarding notification and adds them to the broadcast list.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium">Name</span>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Sam Rivera" />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium">Email</span>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="sam@example.com"
+            />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium">
+              Distinct ID <span className="font-normal text-muted-foreground">— optional</span>
+            </span>
+            <Input
+              value={distinctId}
+              onChange={(e) => setDistinctId(e.target.value)}
+              placeholder="Generated from the roster if left blank"
+              className="font-mono text-xs"
+            />
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button onClick={submit} disabled={saving || !name.trim() || !email.trim()}>
+            <UserPlus className="size-4" /> {saving ? "Adding…" : "Add subscriber"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

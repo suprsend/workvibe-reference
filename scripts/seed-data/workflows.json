@@ -1,20 +1,25 @@
 {
-  "_comment": "Workflows per workspace. `category` must match a slug in categories.json — seed categories first or publishing 400s. Loopride runs 6 workflows, Northwind 7: the counts and the triggers differ on purpose. Promotional sends are NOT workflows — they go out as a broadcast to the all-subscribers list (see lib/server/hub.ts), which is why `offers-and-promos` and `product-news` have no workflow here. `list-welcome` uses a List entry trigger on all-subscribers — deliberately not the same thing as broadcasting to that list: the trigger runs the workflow once per user as they join, a broadcast sends one template to everyone at once.",
-
+  "_comment": "Workflows per workspace. `category` must match a slug in categories.json — seed categories first or publishing 400s. Loopride runs 5 workflows, Northwind 6: the counts and the triggers differ on purpose. Promotional sends are NOT workflows — they go out as a broadcast to the all-subscribers list (see lib/server/hub.ts), which is why `offers-and-promos` and `product-news` have no workflow here. `subscriber-onboarding` uses the List entry trigger on all-subscribers: joining that list is the signup moment, and it is deliberately not the same thing as broadcasting to the list — the trigger runs once per user as they join, a broadcast sends one template to everyone at once.",
   "workvibe-loopride": [
     {
       "slug": "subscriber-onboarding",
       "name": "Subscriber Onboarding",
-      "description": "Auto-fires when a user is added: welcome message on signup.",
+      "description": "Welcomes a consumer when they join the all-subscribers list — SuprSend emits $USER_ENTERED_LIST once the list has track_user_entry on, so joining the list IS the signup moment. One run per person joining, unlike a broadcast to the same list, which sends once to everyone. Its template templates on $recipient and $brand only: SuprSend emits this event, not the app, so there is no payload to carry custom variables.",
       "category": "getting-started",
       "trigger_type": "event",
-      "trigger_events": ["SUBSCRIBER_ONBOARDED"],
+      "trigger_events": [
+        "$USER_ENTERED_LIST - all-subscribers"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "welcome-rider", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "welcome-rider",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
@@ -25,13 +30,19 @@
       "description": "Fires when the driver is close: one inbox + email nudge.",
       "category": "trip-updates",
       "trigger_type": "event",
-      "trigger_events": ["DRIVER_ARRIVING"],
+      "trigger_events": [
+        "DRIVER_ARRIVING"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "driver-arriving", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "driver-arriving",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
@@ -42,13 +53,19 @@
       "description": "Sends the trip receipt once the ride ends.",
       "category": "receipts-and-billing",
       "trigger_type": "event",
-      "trigger_events": ["RIDE_COMPLETED"],
+      "trigger_events": [
+        "RIDE_COMPLETED"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "trip-receipt", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "trip-receipt",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
@@ -59,13 +76,19 @@
       "description": "Security notice on a new device sign-in. Can't be unsubscribed from.",
       "category": "account-security",
       "trigger_type": "event",
-      "trigger_events": ["NEW_SIGN_IN"],
+      "trigger_events": [
+        "NEW_SIGN_IN"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "sign-in-alert", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "sign-in-alert",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
@@ -81,44 +104,36 @@
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "local-service-update", "success": "seen", "success_is_event": false }
-          }
-        ]
-      }
-    },
-    {
-      "slug": "list-welcome",
-      "name": "List Welcome",
-      "description": "Fires when a consumer joins the all-subscribers list. SuprSend emits $USER_ENTERED_LIST once the list has track_user_entry on — one run per user joining, unlike a broadcast to the same list which sends once to everyone.",
-      "category": "getting-started",
-      "trigger_type": "event",
-      "trigger_events": ["$USER_ENTERED_LIST - all-subscribers"],
-      "tree": {
-        "nodes": [
-          {
-            "node_type": "send_multi_channel",
-            "name": "Multi-Channel",
-            "properties": { "template": "welcome-rider", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "local-service-update",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
     }
   ],
-
   "workvibe-northwind": [
     {
       "slug": "subscriber-onboarding",
       "name": "Subscriber Onboarding",
-      "description": "Auto-fires when a user is added: welcome message on signup.",
+      "description": "Welcomes a consumer when they join the all-subscribers list — SuprSend emits $USER_ENTERED_LIST once the list has track_user_entry on, so joining the list IS the signup moment. One run per person joining, unlike a broadcast to the same list, which sends once to everyone. Its template templates on $recipient and $brand only: SuprSend emits this event, not the app, so there is no payload to carry custom variables.",
       "category": "getting-started",
       "trigger_type": "event",
-      "trigger_events": ["SUBSCRIBER_ONBOARDED"],
+      "trigger_events": [
+        "$USER_ENTERED_LIST - all-subscribers"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "welcome-subscriber", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "welcome-subscriber",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
@@ -129,13 +144,19 @@
       "description": "Alerts affected subscribers as soon as an outage is detected.",
       "category": "service-status",
       "trigger_type": "event",
-      "trigger_events": ["OUTAGE_DETECTED"],
+      "trigger_events": [
+        "OUTAGE_DETECTED"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "service-outage", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "service-outage",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
@@ -146,13 +167,19 @@
       "description": "Follows an outage: confirms service is back.",
       "category": "service-status",
       "trigger_type": "event",
-      "trigger_events": ["SERVICE_RESTORED"],
+      "trigger_events": [
+        "SERVICE_RESTORED"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "service-restored", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "service-restored",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
@@ -163,23 +190,36 @@
       "description": "Payment declined: notify now, retry reminder after 3 days.",
       "category": "billing",
       "trigger_type": "event",
-      "trigger_events": ["PAYMENT_FAILED"],
+      "trigger_events": [
+        "PAYMENT_FAILED"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "payment-failed", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "payment-failed",
+              "success": "seen",
+              "success_is_event": false
+            }
           },
           {
             "node_type": "delay",
             "name": "Delay",
-            "properties": { "delay_type": "fixed", "value": "3d" }
+            "properties": {
+              "delay_type": "fixed",
+              "value": "3d"
+            }
           },
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "payment-retry-reminder", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "payment-retry-reminder",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
@@ -190,13 +230,19 @@
       "description": "Router dispatched: tracking details to the subscriber.",
       "category": "equipment-delivery",
       "trigger_type": "event",
-      "trigger_events": ["EQUIPMENT_SHIPPED"],
+      "trigger_events": [
+        "EQUIPMENT_SHIPPED"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "equipment-shipped", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "equipment-shipped",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }
@@ -207,30 +253,19 @@
       "description": "Security notice on a new device sign-in. Can't be unsubscribed from.",
       "category": "account-security",
       "trigger_type": "event",
-      "trigger_events": ["NEW_SIGN_IN"],
+      "trigger_events": [
+        "NEW_SIGN_IN"
+      ],
       "tree": {
         "nodes": [
           {
             "node_type": "send_multi_channel",
             "name": "Multi-Channel",
-            "properties": { "template": "sign-in-alert", "success": "seen", "success_is_event": false }
-          }
-        ]
-      }
-    },
-    {
-      "slug": "list-welcome",
-      "name": "List Welcome",
-      "description": "Fires when a consumer joins the all-subscribers list. SuprSend emits $USER_ENTERED_LIST once the list has track_user_entry on — one run per user joining, unlike a broadcast to the same list which sends once to everyone.",
-      "category": "getting-started",
-      "trigger_type": "event",
-      "trigger_events": ["$USER_ENTERED_LIST - all-subscribers"],
-      "tree": {
-        "nodes": [
-          {
-            "node_type": "send_multi_channel",
-            "name": "Multi-Channel",
-            "properties": { "template": "welcome-subscriber", "success": "seen", "success_is_event": false }
+            "properties": {
+              "template": "sign-in-alert",
+              "success": "seen",
+              "success_is_event": false
+            }
           }
         ]
       }

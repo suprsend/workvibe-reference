@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/server/http";
 import { getActiveWorkspace } from "@/lib/server/workspace";
-import { listUsers, removeUser } from "@/lib/server/users";
+import { listUsers, removeUser, createUser } from "@/lib/server/users";
 
 export async function GET() {
   try {
@@ -10,6 +10,29 @@ export async function GET() {
     return NextResponse.json({ ok: true, users });
   } catch (e) {
     return NextResponse.json({ ok: false, error: errMsg(e) }, { status: 500 });
+  }
+}
+
+// Add a subscriber. Not how consumers really arrive — they sign up in the
+// customer's own product — but the app needs a way to exercise the signup path
+// without a provisioning run. Joining the list is what welcomes them.
+export async function POST(req: Request) {
+  try {
+    const ws = await getActiveWorkspace();
+    const { name, email, distinct_id } = await req.json();
+    if (typeof name !== "string" || !name.trim()) {
+      return NextResponse.json({ ok: false, error: "Name is required." }, { status: 400 });
+    }
+    if (typeof email !== "string" || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
+      return NextResponse.json({ ok: false, error: "A valid email is required." }, { status: 400 });
+    }
+    if (distinct_id != null && (typeof distinct_id !== "string" || !/^[a-zA-Z0-9_-]+$/.test(distinct_id))) {
+      return NextResponse.json({ ok: false, error: "Distinct ID may only use letters, digits, _ and -." }, { status: 400 });
+    }
+    const user = await createUser(ws, { name: name.trim(), email: email.trim(), distinctId: distinct_id });
+    return NextResponse.json({ ok: true, user });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: errMsg(e) }, { status: 400 });
   }
 }
 
