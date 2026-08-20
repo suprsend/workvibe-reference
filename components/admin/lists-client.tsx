@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { List as ListIcon, Megaphone, Mail, Zap, AlertTriangle } from "lucide-react";
+import { List as ListIcon, Megaphone, Mail, Zap } from "lucide-react";
 import type { SubscriberList } from "@/lib/server/lists";
 import { useWorkspace } from "@/components/providers";
 import { PageHeader } from "@/components/shared/page-header";
@@ -38,10 +38,6 @@ function Body() {
       active = false;
     };
   }, []);
-
-  // A member with no matching subscriber. They still count toward the audience, so
-  // show them rather than let the total imply reach it doesn't have.
-  const orphans = list?.members.filter((m) => !m.user).length ?? 0;
 
   return (
     <>
@@ -96,16 +92,6 @@ function Body() {
               )}
             </div>
           </div>
-
-          {orphans > 0 && (
-            <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
-              <span>
-                {orphans === 1 ? "One member is" : `${orphans} members are`} counted in the audience but no
-                longer exist as subscribers, so a broadcast can’t deliver to them.
-              </span>
-            </div>
-          )}
 
           <div className="overflow-hidden rounded-lg border border-border">
             {list.members.map((m) => (
