@@ -157,8 +157,11 @@ function Body() {
           <Field label="Category">
             {category ? (
               <>
-                <p className="flex items-center gap-1.5 text-sm">
-                  <Tag className="size-3.5 text-muted-foreground" /> {category.name}
+                <p className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <Tag className="size-3.5 text-muted-foreground" /> {category.name}
+                  </span>
+                  <Badge variant="outline">Promotional</Badge>
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Set by the template. Promotional only — subscribers opted out of this category won’t
