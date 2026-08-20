@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Megaphone } from "lucide-react";
 import type { MessageRecord } from "@/lib/server/messages";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,9 @@ interface Step {
 interface Run {
   key: string;
   recipientId: string;
+  /** Every distinct recipient in the run. More than one means a fan-out (a
+   *  broadcast), where naming the first recipient would misreport who was sent to. */
+  recipientIds: string[];
   workflowName: string | null;
   tenantId: string | null;
   startedAt: string | null;
@@ -76,6 +79,7 @@ function buildRuns(messages: MessageRecord[]): Run[] {
     runs.push({
       key,
       recipientId: msgs[0]?.recipientId ?? "",
+      recipientIds: [...new Set(msgs.map((m) => m.recipientId).filter(Boolean))],
       workflowName: msgs[0]?.workflowName ?? msgs[0]?.workflowSlug ?? null,
       tenantId: msgs[0]?.tenantId ?? null,
       startedAt: firstStamp(msgs),
@@ -112,7 +116,12 @@ export function RunsView({
 function RunRow({ run, onResend }: { run: Run; onResend: (m: MessageRecord) => void | Promise<void> }) {
   const [open, setOpen] = React.useState(false);
   const { users } = useWorkspace();
-  const recipient = users.find((u) => u.distinctId === run.recipientId)?.name ?? run.recipientId ?? "(unknown)";
+  // A workflow run has exactly one recipient; a broadcast fans out across the list.
+  // Naming one of them would read as though the rest weren't sent to.
+  const fanOut = run.recipientIds.length > 1;
+  const recipient = fanOut
+    ? `${run.recipientIds.length} subscribers`
+    : users.find((u) => u.distinctId === run.recipientId)?.name ?? run.recipientId ?? "(unknown)";
   const rs = runStatusBadge(run.status);
 
   return (
@@ -126,6 +135,11 @@ function RunRow({ run, onResend }: { run: Run; onResend: (m: MessageRecord) => v
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-medium">
             {run.workflowName ?? "Workflow run"} <span className="font-normal text-muted-foreground">· {recipient}</span>
+            {fanOut && (
+              <Badge variant="outline" className="ml-2 gap-1 align-middle text-[10px] font-normal">
+                <Megaphone className="size-3" /> Broadcast
+              </Badge>
+            )}
           </div>
           <div className="text-xs text-muted-foreground">
             Started {timeAgo(run.startedAt)} · {run.steps.length} step{run.steps.length === 1 ? "" : "s"} · {run.total} message
