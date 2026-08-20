@@ -178,10 +178,13 @@ function Body() {
             <Button onClick={() => setConfirming(true)} disabled={!template || !category}>
               <Send className="size-4" /> Review and send
             </Button>
-            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Link
+              href="/admin/lists"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
               <Users className="size-3.5" /> Every subscriber on{" "}
               <code className="text-xs">{options.listId}</code>
-            </span>
+            </Link>
           </div>
         </div>
       )}

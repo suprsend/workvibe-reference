@@ -2,17 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  FileText,
-  Workflow,
-  Megaphone,
-  Activity,
-  BarChart3,
-  SlidersHorizontal,
-  Users,
-  Palette,
-  type LucideIcon,
-} from "lucide-react";
+import { Activity, BarChart3, FileText, ListChecks, Megaphone, Palette, SlidersHorizontal, Users, Workflow, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -31,6 +21,7 @@ const NAV: NavGroup[] = [
     items: [
       { label: "Templates", href: "/admin/templates", icon: FileText },
       { label: "Workflows", href: "/admin/workflows", icon: Workflow },
+      { label: "Lists", href: "/admin/lists", icon: ListChecks },
       { label: "Broadcast", href: "/admin/broadcast", icon: Megaphone },
       { label: "Executions", href: "/admin/executions", icon: Activity },
       { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
