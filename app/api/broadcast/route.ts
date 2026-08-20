@@ -7,21 +7,15 @@ import { getBroadcastTemplate, getBroadcastTemplates } from "@/lib/broadcast";
 import { getPreferenceConfig } from "@/lib/server/preference-config";
 import { getTemplateSampleData } from "@/lib/suprsend-mgmt";
 
-// The form's options: which templates this workspace can broadcast (with their
-// sample data, which seeds the editable payload) and which categories are legal
-// to send them under — the live PROMOTIONAL tree only.
+// The form's options: which templates this workspace can broadcast, and which
+// categories are legal to send them under — the live PROMOTIONAL tree only.
 export async function GET() {
   try {
     const ws = await getActiveWorkspace();
-    const [templates, categories] = await Promise.all([
-      Promise.all(
-        getBroadcastTemplates(ws.slug).map(async (t) => ({
-          ...t,
-          sampleData: await getTemplateSampleData(ws.slug, t.slug).catch(() => ({})),
-        })),
-      ),
-      getPreferenceConfig(ws.slug).then((cats) => cats.filter((c) => c.root === "promotional")),
-    ]);
+    // The template's own sample data is applied server-side at send time, so the
+    // form doesn't need it — don't fetch it per template just to render a picker.
+    const templates = getBroadcastTemplates(ws.slug);
+    const categories = (await getPreferenceConfig(ws.slug)).filter((c) => c.root === "promotional");
     return NextResponse.json({
       ok: true,
       templates,

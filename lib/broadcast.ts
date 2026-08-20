@@ -49,3 +49,28 @@ export function getBroadcastTemplates(ws: WorkspaceSlug): BroadcastTemplate[] {
 export function getBroadcastTemplate(ws: WorkspaceSlug, slug: string): BroadcastTemplate | null {
   return getBroadcastTemplates(ws).find((t) => t.slug === slug) ?? null;
 }
+
+/** A category as it exists in the workspace's live promotional tree. */
+export interface LiveCategory {
+  category: string;
+  name: string;
+}
+
+/**
+ * The category a broadcast sends under: the one its template is registered with,
+ * and only if that category is still in the live PROMOTIONAL tree.
+ *
+ * The category decides whose opt-outs apply, so it is not a per-send choice —
+ * sending a promo under an unrelated category would deliver it to people who
+ * opted out of exactly that kind of message. Returns null rather than falling
+ * back to another category: SuprSend derives a category's slug from its NAME, so
+ * a rename drifts the registered slug out of the tree, and that has to surface
+ * instead of silently sending under whatever else happens to be promotional.
+ */
+export function resolveBroadcastCategory<T extends LiveCategory>(
+  template: { category: string } | null | undefined,
+  promotional: T[],
+): T | null {
+  if (!template) return null;
+  return promotional.find((c) => c.category === template.category) ?? null;
+}
