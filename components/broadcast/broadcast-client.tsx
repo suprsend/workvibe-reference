@@ -3,16 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Megaphone, Plus, Send, SquareArrowOutUpRight, Tag, Trash2, Users } from "lucide-react";
+import { Megaphone, Send, SquareArrowOutUpRight, Tag, Users } from "lucide-react";
 import { useWorkspace } from "@/components/providers";
-import { getWorkspace } from "@/lib/workspaces";
+import { resolveBroadcastCategory } from "@/lib/broadcast";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHANNEL_ICON, CHANNEL_LABEL } from "@/lib/message-display";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +24,6 @@ interface BroadcastTemplateOption {
   name: string;
   description: string;
   category: string;
-  sampleData: Record<string, string>;
 }
 interface CategoryOption {
   category: string;
@@ -38,59 +35,15 @@ interface Options {
   listId: string;
 }
 
-/** What the picked template actually says, per channel — the send preview. */
-interface TemplateContent {
-  email?: { subject: string };
-  inbox?: { title: string; body: string };
-}
-
-/** One editable merge variable row. `fixed` rows come from the template's sample
- *  data, so their key is the template's, not the sender's, to rename. */
-interface Variable {
-  key: string;
-  value: string;
-  fixed: boolean;
-}
-
-function toVariables(t: BroadcastTemplateOption): Variable[] {
-  return Object.entries(t.sampleData ?? {}).map(([key, value]) => ({ key, value, fixed: true }));
-}
-
-/** Fill {{var}} from the current values so the preview shows the real copy.
- *  `$recipient.*` resolves per subscriber at send time — a broadcast sends one
- *  payload to everyone, so the preview stands in rather than naming one person. */
-function render(text: string, vars: Variable[], brandName: string): string {
-  return text.replace(/\{\{\s*([\w.$]+)\s*\}\}/g, (whole, name: string) => {
-    const hit = vars.find((v) => v.key === name);
-    if (hit) return hit.value;
-    if (name === "$brand.brand_name") return brandName;
-    if (name.startsWith("$recipient.")) return "each subscriber";
-    return whole;
-  });
-}
-
-// A template's default category is what the app expects; the dropdown is what the
-// workspace actually has. SuprSend derives a category's slug from its NAME and
-// ignores the slug it was seeded with, so a default can drift out of the live tree
-// — fall back to the first real category rather than leaving the select showing one
-// option while holding another, which submits a slug the API then rejects.
-function resolveCategory(preferred: string, categories: CategoryOption[]): string {
-  if (categories.some((c) => c.category === preferred)) return preferred;
-  return categories[0]?.category ?? "";
-}
-
 export function BroadcastClient() {
   const { workspace } = useWorkspace();
-  return <Body key={workspace} brandName={getWorkspace(workspace).label} />;
+  return <Body key={workspace} />;
 }
 
-function Body({ brandName }: { brandName: string }) {
+function Body() {
   const [options, setOptions] = React.useState<Options | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [slug, setSlug] = React.useState("");
-  const [category, setCategory] = React.useState("");
-  const [vars, setVars] = React.useState<Variable[]>([]);
-  const [content, setContent] = React.useState<TemplateContent | null>(null);
   const [confirming, setConfirming] = React.useState(false);
   const [sending, setSending] = React.useState(false);
 
@@ -107,12 +60,7 @@ function Body({ brandName }: { brandName: string }) {
           return;
         }
         setOptions({ templates: data.templates, categories: data.categories, listId: data.listId });
-        const first: BroadcastTemplateOption | undefined = data.templates[0];
-        if (first) {
-          setSlug(first.slug);
-          setCategory(resolveCategory(first.category, data.categories));
-          setVars(toVariables(first));
-        }
+        if (data.templates[0]) setSlug(data.templates[0].slug);
       } catch {
         if (active) {
           setError("Couldn’t reach SuprSend.");
@@ -125,51 +73,19 @@ function Body({ brandName }: { brandName: string }) {
     };
   }, []);
 
-  // The picked template's live copy, so the sender can see what actually goes out
-  // instead of inferring it from a slug.
-  React.useEffect(() => {
-    if (!slug) return;
-    let active = true;
-    (async () => {
-      try {
-        const res = await fetch(`/api/templates?slug=${encodeURIComponent(slug)}`, { cache: "no-store" });
-        const d = await res.json();
-        if (active && d.ok) setContent(d.template as TemplateContent);
-      } catch {
-        /* preview is best-effort — the form still works without it */
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [slug]);
-
-  // Choosing a template resets the category to its default and reseeds the payload
-  // from that template's sample values — a payload from another template would
-  // leave the new one's variables unresolved.
-  function pick(nextSlug: string) {
-    const t = options?.templates.find((x) => x.slug === nextSlug);
-    if (!t) return;
-    setContent(null); // drop the old template's copy while the new one loads
-    setSlug(t.slug);
-    setCategory(resolveCategory(t.category, options?.categories ?? []));
-    setVars(toVariables(t));
-  }
-
   const template = options?.templates.find((t) => t.slug === slug) ?? null;
+  const category = resolveBroadcastCategory(template, options?.categories ?? []);
 
   async function send() {
-    if (!template) return;
+    if (!template || !category) return;
     setSending(true);
     try {
-      const data: Record<string, string> = {};
-      for (const v of vars) {
-        if (v.key.trim()) data[v.key.trim()] = v.value;
-      }
+      // No payload: /api/broadcast fills every variable from the template's own
+      // sample data, the same way the workflow Send test does.
       const res = await fetch("/api/broadcast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ template: template.slug, category, data }),
+        body: JSON.stringify({ template: template.slug, category: category.category }),
       });
       const d = await res.json();
       if (d.ok) {
@@ -187,7 +103,6 @@ function Body({ brandName }: { brandName: string }) {
     }
   }
 
-  const categoryName = options?.categories.find((c) => c.category === category)?.name ?? category;
 
   return (
     <>
@@ -201,9 +116,9 @@ function Body({ brandName }: { brandName: string }) {
       )}
 
       {options === null ? (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <Skeleton className="h-72 rounded-lg" />
-          <Skeleton className="h-56 rounded-lg" />
+        <div className="max-w-2xl space-y-3">
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-40 w-full rounded-lg" />
         </div>
       ) : options.templates.length === 0 ? (
         <EmptyState
@@ -212,14 +127,13 @@ function Body({ brandName }: { brandName: string }) {
           description="A broadcast sends a promotional template to the whole subscriber list. Publish one for this workspace and it shows up here."
         />
       ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          {/* ── Form ─────────────────────────────────────────────────────── */}
-          <div className="space-y-5">
-            <Field label="Template">
+        <div className="max-w-2xl space-y-5">
+          <Field label="Template">
+            <div className="flex items-center gap-2">
               <select
                 value={slug}
-                onChange={(e) => pick(e.target.value)}
-                className="w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm"
+                onChange={(e) => setSlug(e.target.value)}
+                className="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-2 text-sm"
               >
                 {options.templates.map((t) => (
                   <option key={t.slug} value={t.slug}>
@@ -227,132 +141,48 @@ function Body({ brandName }: { brandName: string }) {
                   </option>
                 ))}
               </select>
-              {template?.description && (
-                <p className="text-xs text-muted-foreground">{template.description}</p>
-              )}
-            </Field>
-
-            <Field label="Category">
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm"
-              >
-                {options.categories.map((c) => (
-                  <option key={c.category} value={c.category}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              {options.categories.length === 0 ? (
-                <p className="text-xs text-destructive">
-                  This workspace has no promotional categories, so there’s nothing a broadcast can legally
-                  send under. Add one in Preference defaults first.
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Promotional only. Subscribers opted out of this category won’t receive it.
-                </p>
-              )}
-            </Field>
-
-            <Field label="Variables">
-              <div className="space-y-1.5">
-                {vars.map((v, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    {v.fixed ? (
-                      <code className="w-40 shrink-0 truncate text-xs text-muted-foreground" title={v.key}>
-                        {v.key}
-                      </code>
-                    ) : (
-                      <Input
-                        value={v.key}
-                        onChange={(e) =>
-                          setVars((rows) => rows.map((r, j) => (j === i ? { ...r, key: e.target.value } : r)))
-                        }
-                        placeholder="variable"
-                        className="h-9 w-40 shrink-0 font-mono text-xs"
-                      />
-                    )}
-                    <Input
-                      value={v.value}
-                      onChange={(e) =>
-                        setVars((rows) => rows.map((r, j) => (j === i ? { ...r, value: e.target.value } : r)))
-                      }
-                      placeholder="value"
-                      className="h-9 flex-1"
-                    />
-                    {!v.fixed && (
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Remove ${v.key || "variable"}`}
-                        onClick={() => setVars((rows) => rows.filter((_, j) => j !== i))}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                  onClick={() => setVars((rows) => [...rows, { key: "", value: "", fixed: false }])}
-                >
-                  <Plus className="size-4" /> Add variable
-                </Button>
-              </div>
-            </Field>
-
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-5">
-              <Button onClick={() => setConfirming(true)} disabled={!template || !category}>
-                <Send className="size-4" /> Review and send
-              </Button>
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Users className="size-3.5" /> Every subscriber on{" "}
-                <code className="text-xs">{options.listId}</code>
-              </span>
-            </div>
-          </div>
-
-          {/* ── What gets sent ───────────────────────────────────────────── */}
-          <aside className="rounded-lg border border-border lg:sticky lg:top-20">
-            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2.5">
-              <h2 className="text-sm font-semibold">What gets sent</h2>
               {template && (
-                <Button asChild variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
+                <Button asChild variant="outline" size="sm" className="shrink-0 gap-1.5">
                   <Link href={`/admin/templates/${template.slug}`}>
-                    Edit <SquareArrowOutUpRight className="size-3.5" />
+                    View message <SquareArrowOutUpRight className="size-3.5" />
                   </Link>
                 </Button>
               )}
             </div>
-            <div className="space-y-4 p-4">
-              {content === null ? (
-                <Skeleton className="h-28 w-full rounded-md" />
-              ) : (
-                <>
-                  {content.email && (
-                    <ChannelPreview channel="email">
-                      <p className="font-medium">{render(content.email.subject, vars, brandName)}</p>
-                    </ChannelPreview>
-                  )}
-                  {content.inbox && (
-                    <ChannelPreview channel="inbox">
-                      <p className="font-medium">{render(content.inbox.title, vars, brandName)}</p>
-                      <p className="mt-0.5 text-muted-foreground">{render(content.inbox.body, vars, brandName)}</p>
-                    </ChannelPreview>
-                  )}
-                  {!content.email && !content.inbox && (
-                    <p className="text-sm text-muted-foreground">
-                      This template has no email or inbox content to preview.
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-          </aside>
+            {template?.description && (
+              <p className="text-xs text-muted-foreground">{template.description}</p>
+            )}
+          </Field>
+
+          <Field label="Category">
+            {category ? (
+              <>
+                <p className="flex items-center gap-1.5 text-sm">
+                  <Tag className="size-3.5 text-muted-foreground" /> {category.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Set by the template. Promotional only — subscribers opted out of this category won’t
+                  receive it.
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-destructive">
+                This template is registered under <code>{template?.category}</code>, which isn’t a
+                promotional category in this workspace — so there is nothing it can legally send under.
+                Add or rename it in Preference defaults first.
+              </p>
+            )}
+          </Field>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-5">
+            <Button onClick={() => setConfirming(true)} disabled={!template || !category}>
+              <Send className="size-4" /> Review and send
+            </Button>
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Users className="size-3.5" /> Every subscriber on{" "}
+              <code className="text-xs">{options.listId}</code>
+            </span>
+          </div>
         </div>
       )}
 
@@ -367,7 +197,7 @@ function Body({ brandName }: { brandName: string }) {
               <code className="text-xs text-muted-foreground">{template?.slug}</code>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="gap-1">
-                  <Tag className="size-3" /> {categoryName}
+                  <Tag className="size-3" /> {category?.name}
                 </Badge>
                 <Badge variant="outline" className="gap-1">
                   <Users className="size-3" /> {options?.listId}
@@ -399,17 +229,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <h2 className="text-sm font-medium">{label}</h2>
       {children}
     </section>
-  );
-}
-
-function ChannelPreview({ channel, children }: { channel: string; children: React.ReactNode }) {
-  const Icon = CHANNEL_ICON[channel];
-  return (
-    <div>
-      <div className="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-        {Icon && <Icon className="size-3.5" />} {CHANNEL_LABEL[channel] ?? channel}
-      </div>
-      <div className="rounded-md border border-border bg-muted/30 p-3 text-sm">{children}</div>
-    </div>
   );
 }
