@@ -39,10 +39,8 @@ function Body() {
     };
   }, []);
 
-  // A row SuprSend still counts but whose subscriber is gone: deleting a user
-  // currently leaves their list membership behind, and the removal call reports
-  // success while affecting nothing. Confirmed with SuprSend as a bug (2026-08-20),
-  // so this surfaces the state without describing it as how lists work.
+  // A member with no matching subscriber. They still count toward the audience, so
+  // show them rather than let the total imply reach it doesn't have.
   const orphans = list?.members.filter((m) => !m.user).length ?? 0;
 
   return (
