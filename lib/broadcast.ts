@@ -1,16 +1,19 @@
-// The templates each workspace can broadcast.
+// Which templates this workspace can broadcast.
 //
 // A broadcast targets a TEMPLATE, not a workflow — there is no journey, just one
 // send fanned out across the all-subscribers list. SuprSend templates carry no
-// category of their own (the category lives on the workflow that sends them), so
-// a broadcast has to name one, and this registry is where the app records which
-// template goes out under which category.
+// category of their own (a workflow names the category for the templates it
+// sends), so a broadcast has to name one, and the seed records it per template as
+// `broadcastCategory`. Declaring it is the whole of what makes a template
+// broadcastable — there is no separate whitelist, and no platform restriction
+// either: SuprSend will broadcast any template you name a category for.
 //
-// Every entry is PROMOTIONAL on purpose: per SuprSend's docs a broadcast on a
-// transactional or system category delays other traffic on those categories.
-// The API route still checks the submitted category against the workspace's live
-// promotional tree — this registry sets the default, not the guarantee.
+// That category must be PROMOTIONAL: per SuprSend's docs a broadcast on a
+// transactional or system category delays other traffic on those categories. The
+// API route re-checks the submitted category against the workspace's live
+// promotional tree, so the seed sets the pairing, not the guarantee.
 import type { WorkspaceSlug } from "@/lib/workspaces";
+import templates from "@/scripts/seed-data/templates.json";
 
 export interface BroadcastTemplate {
   /** Template slug in SuprSend. */
@@ -19,31 +22,28 @@ export interface BroadcastTemplate {
   name: string;
   /** What this broadcast is, in one line. */
   description: string;
-  /** Promotional category it sends under by default. */
+  /** Promotional category it sends under. */
   category: string;
 }
 
-export const BROADCAST_TEMPLATES: Record<WorkspaceSlug, BroadcastTemplate[]> = {
-  "workvibe-loopride": [
-    {
-      slug: "ride-credit-offer",
-      name: "Ride credit offer",
-      description: "Promo code and ride credit for the whole rider base.",
-      category: "offers-and-promos",
-    },
-  ],
-  "workvibe-northwind": [
-    {
-      slug: "product-announcement",
-      name: "Product announcement",
-      description: "New features, coverage and speed upgrades.",
-      category: "product-news",
-    },
-  ],
-};
+interface SeedTemplate {
+  slug: string;
+  name: string;
+  description?: string;
+  broadcastCategory?: string;
+}
+
+const BY_WORKSPACE = templates as unknown as Record<string, SeedTemplate[]>;
 
 export function getBroadcastTemplates(ws: WorkspaceSlug): BroadcastTemplate[] {
-  return BROADCAST_TEMPLATES[ws] ?? [];
+  return (BY_WORKSPACE[ws] ?? [])
+    .filter((t) => Boolean(t.broadcastCategory))
+    .map((t) => ({
+      slug: t.slug,
+      name: t.name,
+      description: t.description ?? "",
+      category: t.broadcastCategory as string,
+    }));
 }
 
 export function getBroadcastTemplate(ws: WorkspaceSlug, slug: string): BroadcastTemplate | null {
@@ -57,14 +57,14 @@ export interface LiveCategory {
 }
 
 /**
- * The category a broadcast sends under: the one its template is registered with,
- * and only if that category is still in the live PROMOTIONAL tree.
+ * The category a broadcast sends under: the one its template declares, and only if
+ * that category is still in the live PROMOTIONAL tree.
  *
  * The category decides whose opt-outs apply, so it is not a per-send choice —
  * sending a promo under an unrelated category would deliver it to people who
  * opted out of exactly that kind of message. Returns null rather than falling
  * back to another category: SuprSend derives a category's slug from its NAME, so
- * a rename drifts the registered slug out of the tree, and that has to surface
+ * a rename drifts the declared slug out of the tree, and that has to surface
  * instead of silently sending under whatever else happens to be promotional.
  */
 export function resolveBroadcastCategory<T extends LiveCategory>(

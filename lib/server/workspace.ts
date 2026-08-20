@@ -40,6 +40,15 @@ export interface WorkspaceSecrets {
   signingKeyB64: string;
 }
 
+/** Workspace key + secret — the pair hub's signed-request scheme authenticates with. */
+export function getWorkspaceCredentials(ws: Workspace): { workspaceKey: string; workspaceSecret: string } {
+  const prefix = envPrefix(ws);
+  const workspaceKey = process.env[`${prefix}_WORKSPACE_KEY`];
+  const workspaceSecret = process.env[`${prefix}_WORKSPACE_SECRET`];
+  if (!workspaceKey || !workspaceSecret) throw new Error(`Missing workspace key/secret for ${ws.slug}`);
+  return { workspaceKey, workspaceSecret };
+}
+
 /** Per-workspace secrets (workspace key + signing key) for the embedded editor JWT. */
 export function getWorkspaceSecrets(ws: Workspace): WorkspaceSecrets {
   const prefix = envPrefix(ws);
