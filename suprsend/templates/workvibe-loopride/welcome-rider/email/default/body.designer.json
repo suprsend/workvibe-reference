@@ -186,7 +186,7 @@
         "id": "OR_sx_xHBf",
         "type": "paragraph",
         "values": {
-         "text": "<p style=\"margin: 0px; margin-block: 0px;\"><span>Your {{$brand.brand_name}} account is ready. Add a payment method and your first ride is on us, up to {{signup_credit}}.</span></p>",
+         "text": "<p style=\"margin: 0px; margin-block: 0px;\"><span>Your {{$brand.brand_name}} account is ready. Add a payment method and book your first ride whenever you&#39;re ready to go.</span></p>",
          "_meta": {
           "htmlID": "u_content_paragraph_1",
           "htmlClassNames": "u_content_paragraph"
@@ -238,7 +238,7 @@
            "target": "{{target}}"
           },
           "values": {
-           "href": "{{app_url}}",
+           "href": "https://example.com/app",
            "target": "_blank"
           }
          },

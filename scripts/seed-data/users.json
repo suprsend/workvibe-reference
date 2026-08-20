@@ -1,5 +1,5 @@
 {
-  "_comment": "Demo consumers per workspace. These stand in for people who signed up in the CUSTOMER's own product — Loopride's app, Northwind's checkout — not people an admin typed into WorkVibe. `provision.mjs users` upserts them and, for each one it had to create, emits SUBSCRIBER_ONBOARDED so the onboarding workflow fires exactly once, the way a real signup would. Re-running never re-sends. The first entry in each list is the preview recipient every template's mock_data points at; keep it. All addresses are @example.com (IANA-reserved, cannot receive mail).",
+  "_comment": "Demo consumers per workspace. These stand in for people who signed up in the CUSTOMER's own product — Loopride's app, Northwind's checkout — not people an admin typed into WorkVibe. `provision.mjs users` upserts them and adds each one to the all-subscribers list; joining that list is what emits $USER_ENTERED_LIST and welcomes them, the way a real signup would. An existing member does not re-enter, so re-running never re-welcomes anyone. The first entry in each list is the preview recipient every template's mock_data points at; keep it. All addresses are @example.com (IANA-reserved, cannot receive mail).",
 
   "workvibe-loopride": [
     { "distinct_id": "u_20388", "name": "Sam Rivera", "email": "sam@example.com" },

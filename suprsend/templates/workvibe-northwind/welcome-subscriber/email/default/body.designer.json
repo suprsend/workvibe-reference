@@ -186,7 +186,7 @@
         "id": "OR_sx_xHBf",
         "type": "paragraph",
         "values": {
-         "text": "<p style=\"margin: 0px; margin-block: 0px;\"><span>Your broadband is being set up. We&#39;ll email tracking as soon as your router ships, and your line goes live on {{activation_date}}.</span></p>",
+         "text": "<p style=\"margin: 0px; margin-block: 0px;\"><span>Your broadband is being set up. We&#39;ll email tracking as soon as your router ships, and again the moment your line goes live.</span></p>",
          "_meta": {
           "htmlID": "u_content_paragraph_1",
           "htmlClassNames": "u_content_paragraph"
@@ -238,7 +238,7 @@
            "target": "{{target}}"
           },
           "values": {
-           "href": "{{account_url}}",
+           "href": "https://example.com/account",
            "target": "_blank"
           }
          },
