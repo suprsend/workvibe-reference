@@ -100,12 +100,12 @@ function Body() {
                 className="flex items-center gap-3 border-b border-border px-4 py-2.5 text-sm last:border-0"
               >
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                  {(m.user?.name ?? m.distinctId).slice(0, 1).toUpperCase()}
+                  {m.user.name.slice(0, 1).toUpperCase()}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{m.user?.name ?? m.distinctId}</span>
+                  <span className="block truncate font-medium">{m.user.name}</span>
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {m.user?.email ? (
+                    {m.user.email ? (
                       <>
                         <Mail className="size-3" /> {m.user.email}
                       </>
@@ -114,11 +114,6 @@ function Body() {
                     )}
                   </span>
                 </span>
-                {!m.user && (
-                  <Badge variant="outline" className="shrink-0 text-amber-600" title="No subscriber with this ID">
-                    Deleted
-                  </Badge>
-                )}
                 <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">
                   {m.joinedAt ? timeAgo(m.joinedAt) : "—"}
                 </span>
