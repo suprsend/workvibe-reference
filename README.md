@@ -57,6 +57,8 @@ public/wf-engine.js   Canvas rendering engine
 >
 > - **`app/api/subscriber-token/route.ts`** takes `distinct_id` from a query parameter. Derive it from your app's authenticated server-side session instead — never from client input — or a caller can read anyone's notification feed.
 > - **`app/api/editor-token/route.ts`** issues a token scoped to `entity_id: "*"`, i.e. every template in the workspace. Gate this route to admin users, and narrow the scope to specific templates where you can.
+>
+> **If you do need to put it somewhere reachable** — to show it to someone — set `DEMO_PASSWORD` on the deployment. `proxy.ts` then puts every page and API route behind that one shared password, which is enough to stop a stray URL exposing your SuprSend workspace. It is a demo gate, not authentication: everyone shares one password and, once past it, still acts as any user or admin. Leave the variable unset locally and the gate is off.
 
 ### Prerequisites
 

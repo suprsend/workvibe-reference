@@ -15,19 +15,18 @@ import { listUsers, type WorkUser } from "@/lib/server/users";
 
 const HOST = (process.env.SUPRSEND_HOST || "https://hub.suprsend.com/").replace(/\/$/, "");
 
-/** One member of a list, joined against the user roster where possible. */
+/** One member of a list, joined against the user roster. */
 export interface ListMember {
   distinctId: string;
   joinedAt: string | null;
-  /** Null when the subscriber no longer exists — removing them leaves the row behind. */
-  user: WorkUser | null;
+  user: WorkUser;
 }
 
 export interface SubscriberList {
   listId: string;
   name: string;
   description: string | null;
-  /** SuprSend's own count, which includes members whose user has been deleted. */
+  /** Members who can actually be sent to — see the filter in getSubscriberList. */
   count: number;
   trackUserEntry: boolean;
   members: ListMember[];
@@ -73,14 +72,23 @@ export async function getSubscriberList(ws: Workspace, listId: string): Promise<
     listUsers(ws),
   ]);
   const byId = new Map(users.map((u) => [u.distinctId, u]));
+
+  // Only members who resolve to a subscriber. A membership row can outlive the
+  // subscriber it points at, and nothing can be delivered to one of those — it is
+  // not part of the audience, so counting or listing it would overstate reach.
+  // Reporting the roster count rather than SuprSend's `subscribers_count` keeps the
+  // header and the table telling the same story.
+  const joined: ListMember[] = members.flatMap((m) => {
+    const user = byId.get(m.distinct_id);
+    return user ? [{ distinctId: m.distinct_id, joinedAt: m.created_at ?? null, user }] : [];
+  });
+
   return {
     listId,
     name: (raw.list_name as string) ?? listId,
     description: (raw.list_description as string) ?? null,
-    count: (raw.subscribers_count as number) ?? members.length,
+    count: joined.length,
     trackUserEntry: Boolean(raw.track_user_entry),
-    members: members
-      .map((m) => ({ distinctId: m.distinct_id, joinedAt: m.created_at ?? null, user: byId.get(m.distinct_id) ?? null }))
-      .sort((a, b) => (b.joinedAt ?? "").localeCompare(a.joinedAt ?? "")),
+    members: joined.sort((a, b) => (b.joinedAt ?? "").localeCompare(a.joinedAt ?? "")),
   };
 }
