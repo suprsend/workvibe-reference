@@ -32,7 +32,7 @@
       ],
       "subject": "{{$recipient.name}}, your driver is arriving",
       "heading": "{{$recipient.name}}, your driver is arriving",
-      "paragraph": "{{driver_name}} is a minute away in a {{vehicle_colour}} {{vehicle_model}}, plate {{plate_number}}. Head to {{pickup_point}}.",
+      "paragraph": "{{driver_name}} is a minute away in a {{vehicle_color}} {{vehicle_model}}, plate {{plate_number}}. Head to {{pickup_point}}.",
       "button": {
         "text": "Track your ride",
         "url": "{{trip_url}}"
@@ -42,10 +42,10 @@
         "body": "{{driver_name}} is a minute away — {{vehicle_model}}, {{plate_number}}."
       },
       "sampleData": {
-        "driver_name": "Priya",
-        "vehicle_colour": "white",
-        "vehicle_model": "Swift",
-        "plate_number": "KA 05 8821",
+        "driver_name": "Marcus",
+        "vehicle_color": "white",
+        "vehicle_model": "Corolla",
+        "plate_number": "TXK-8821",
         "pickup_point": "Gate 2",
         "trip_url": "https://example.com/trip/8821"
       }
@@ -66,9 +66,9 @@
       },
       "inbox": null,
       "sampleData": {
-        "pickup_point": "Indiranagar",
-        "drop_point": "Koramangala",
-        "fare_total": "₹248",
+        "pickup_point": "South Congress",
+        "drop_point": "Mueller",
+        "fare_total": "$24.80",
         "payment_method": "Visa ••4471",
         "trip_duration": "22 min",
         "receipt_url": "https://example.com/receipt/8821"
@@ -95,7 +95,7 @@
       },
       "sampleData": {
         "device": "iPhone 15",
-        "location": "Bengaluru, IN",
+        "location": "Austin, TX",
         "sign_in_time": "9:42 AM",
         "security_url": "https://example.com/security"
       }
@@ -116,10 +116,10 @@
       },
       "inbox": null,
       "sampleData": {
-        "city": "Bengaluru",
-        "effective_date": "1 September",
-        "change_summary": "Airport pickups move to the new Level 1 bay.",
-        "details_url": "https://example.com/updates/blr"
+        "city": "Austin",
+        "effective_date": "September 1",
+        "change_summary": "Airport pickups move to the Level 1 rideshare lot.",
+        "details_url": "https://example.com/updates/aus"
       }
     },
     {
@@ -142,9 +142,9 @@
         "body": "Use code {{promo_code}} — ends {{expires_on}}."
       },
       "sampleData": {
-        "credit_amount": "₹150",
-        "promo_code": "LOOP150",
-        "expires_on": "31 August",
+        "credit_amount": "$15",
+        "promo_code": "LOOP15",
+        "expires_on": "August 31",
         "cta_url": "https://example.com/book"
       },
       "broadcastCategory": "offers-and-promos"
@@ -192,9 +192,9 @@
         "body": "Down since {{started_at}}. Expected back by {{eta}}."
       },
       "sampleData": {
-        "area": "North Bristol",
-        "started_at": "06:20",
-        "eta": "11:00",
+        "area": "North Denver",
+        "started_at": "6:20 AM",
+        "eta": "11:00 AM",
         "status_url": "https://example.com/status"
       }
     },
@@ -218,8 +218,8 @@
         "body": "Back online since {{restored_at}}."
       },
       "sampleData": {
-        "area": "North Bristol",
-        "restored_at": "10:41",
+        "area": "North Denver",
+        "restored_at": "10:41 AM",
         "help_url": "https://example.com/help"
       }
     },
@@ -239,7 +239,7 @@
       },
       "inbox": null,
       "sampleData": {
-        "amount_due": "£38.00",
+        "amount_due": "$38.00",
         "payment_method": "Visa ••2210",
         "invoice_number": "NW-40912",
         "billing_url": "https://example.com/billing"
@@ -261,9 +261,9 @@
       },
       "inbox": null,
       "sampleData": {
-        "amount_due": "£38.00",
+        "amount_due": "$38.00",
         "invoice_number": "NW-40912",
-        "suspend_date": "24 August",
+        "suspend_date": "August 24",
         "billing_url": "https://example.com/billing"
       }
     },
@@ -288,9 +288,9 @@
       },
       "sampleData": {
         "device_model": "Northwind Hub 6",
-        "carrier": "Royal Mail",
+        "carrier": "UPS",
         "delivery_window": "Thursday",
-        "tracking_number": "RM4471822GB",
+        "tracking_number": "1Z999AA10144718220",
         "tracking_url": "https://example.com/track"
       }
     },
@@ -315,7 +315,7 @@
       },
       "sampleData": {
         "device": "MacBook Pro",
-        "location": "Bristol, UK",
+        "location": "Denver, CO",
         "sign_in_time": "9:42 AM",
         "security_url": "https://example.com/security"
       }
@@ -341,8 +341,8 @@
       },
       "sampleData": {
         "headline": "your speeds just doubled",
-        "announcement_body": "We've upgraded the network in your area to full fibre.",
-        "rollout_date": "1 September",
+        "announcement_body": "We've upgraded the network in your area to full fiber.",
+        "rollout_date": "September 1",
         "cta_url": "https://example.com/whats-new"
       },
       "broadcastCategory": "product-news"

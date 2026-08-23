@@ -186,7 +186,7 @@
         "id": "OR_sx_xHBf",
         "type": "paragraph",
         "values": {
-         "text": "<p style=\"margin: 0px; margin-block: 0px;\"><span>{{driver_name}} is a minute away in a {{vehicle_colour}} {{vehicle_model}}, plate {{plate_number}}. Head to {{pickup_point}}.</span></p>",
+         "text": "<p style=\"margin: 0px; margin-block: 0px;\"><span>{{driver_name}} is a minute away in a {{vehicle_color}} {{vehicle_model}}, plate {{plate_number}}. Head to {{pickup_point}}.</span></p>",
          "_meta": {
           "htmlID": "u_content_paragraph_1",
           "htmlClassNames": "u_content_paragraph"
