@@ -146,6 +146,8 @@ base64 -i signing-key.pem | tr -d '\n'
 >
 > **Note — content seeding.** Step 7's categories, templates, and workflows are ported verbatim from the working set this app was built and tested against — not placeholder copy. All three stages publish through the same commit flow the app itself uses, so re-running them is safe.
 >
+> **Note — the list-entry welcome.** The hub API silently ignores `track_user_entry` when provisioning creates the `all-subscribers` list, and offers no call to change it afterwards — the flag can only be enabled from the list's page in the dashboard. Do that **before** running `provision.mjs users`: a member who joins while tracking is off never emits `$USER_ENTERED_LIST`, is never welcomed, and won't re-enter on a re-run. The `users` stage checks the flag and warns when it's off.
+>
 > Redeploying the app does **not** re-run any of this. Provisioning and seeding are one-time (or on-demand) commands a developer runs locally; the build/deploy pipeline only runs `next build`.
 
 ### Configuring additional workspaces

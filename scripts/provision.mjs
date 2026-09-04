@@ -476,17 +476,30 @@ const SUBSCRIBERS_LIST = "all-subscribers";
 
 // create() is an upsert, so this both creates the list and keeps its settings correct on
 // re-runs. `track_user_entry` is what makes SuprSend emit `$USER_ENTERED_LIST - <list_id>`;
-// without it the list-entry workflow can never fire, and nothing surfaces that — the list
-// simply sits there. Setting it here means no dashboard step to deploy this app.
+// without it the list-entry welcome workflow can never fire. The hub API accepts the field
+// but silently ignores it (verified: create() echoes back track_user_entry: false, and no
+// PATCH/PUT exists on /v1/subscriber_list/), so it can only be enabled from the dashboard —
+// and it must be ON BEFORE members join: an existing member never re-enters, so anyone who
+// joined while it was off is never welcomed, even after enabling it. Hence the loud check.
 async function ensureList(client) {
   await client.subscriber_lists
     .create({
       list_id: SUBSCRIBERS_LIST,
       list_name: "All subscribers",
       list_description: "Every consumer in this workspace — the broadcast audience.",
-      track_user_entry: true,
+      track_user_entry: true, // sent, but ignored by the API — see the check below
     })
     .catch(() => {});
+  try {
+    const list = await client.subscriber_lists.get(SUBSCRIBERS_LIST);
+    if (!list?.track_user_entry) {
+      console.log(`  ⚠ "${SUBSCRIBERS_LIST}" has user-entry tracking OFF — the welcome workflow will NOT fire.`);
+      console.log("    Enable it on the list in the SuprSend dashboard BEFORE seeding users; members who");
+      console.log("    joined while it was off never fire $USER_ENTERED_LIST and are never welcomed.");
+    }
+  } catch {
+    // best-effort check only — never block seeding on it
+  }
 }
 
 async function cmdUsers() {
