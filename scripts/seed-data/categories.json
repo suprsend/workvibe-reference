@@ -1,27 +1,27 @@
 {
-  "_comment": "Preference category tree per workspace. All three root categories (system, transactional, promotional) MUST be present — the API rejects a partial tree. Every workflow's `category` (see workflows.json) must match a slug here, or publishing that workflow fails with a 400 ('<category>' not found). Seed BEFORE workflows. The two workspaces deliberately DIVERGE: only `account-security` is shared. That divergence is the point — each customer models what its own consumers get notified about.",
+  "_comment": "Preference category tree per workspace. All three root categories (system, transactional, promotional) MUST be present — the API rejects a partial tree. SuprSend derives each category's slug from its NAME (the `category` field is informational here): 'Order updates' → order-updates, '&' → 'and'. Keep name and slug consistent, because every workflow's `category` (see workflows.json) must match the derived slug or publishing that workflow fails with a 400 ('<category>' not found). Seed BEFORE workflows. Both workspaces share the SAME four default categories — that sameness is the point: WorkVibe's customers are all restaurant chains running the same core notifications. Each customer then adds its own: Ember & Oak a transactional `feedback` category, Nolan's a promotional `offers` category.",
 
-  "workvibe-loopride": [
+  "workvibe-emberoak": [
     { "root_category": "system", "sections": [] },
     {
       "root_category": "transactional",
       "sections": [
         {
-          "name": "Your trips",
-          "slug": "your-trips",
+          "name": "Your orders",
+          "slug": "your-orders",
           "categories": [
             {
-              "category": "trip-updates",
-              "name": "Trip updates",
-              "description": "Driver assigned, driver arriving, and trip status.",
+              "category": "order-updates",
+              "name": "Order updates",
+              "description": "Order confirmed, order ready, and status along the way.",
               "default_preference": "opt_in",
               "default_opt_in_channels": ["inbox", "email"],
               "default_mandatory_channels": null
             },
             {
-              "category": "receipts-and-billing",
-              "name": "Receipts & billing",
-              "description": "Trip receipts and payment charges.",
+              "category": "receipts",
+              "name": "Receipts",
+              "description": "Your receipt after each paid order.",
               "default_preference": "opt_in",
               "default_opt_in_channels": ["email"],
               "default_mandatory_channels": null
@@ -35,7 +35,7 @@
             {
               "category": "getting-started",
               "name": "Getting started",
-              "description": "Welcome and account setup for new users.",
+              "description": "Welcome and account setup for new diners.",
               "default_preference": "opt_in",
               "default_opt_in_channels": ["email", "inbox"],
               "default_mandatory_channels": null
@@ -49,28 +49,15 @@
               "default_mandatory_channels": ["email"]
             }
           ]
-        }
-      ]
-    },
-    {
-      "root_category": "promotional",
-      "sections": [
+        },
         {
-          "name": "Offers and news",
-          "slug": "offers-and-news",
+          "name": "Feedback",
+          "slug": "feedback-section",
           "categories": [
             {
-              "category": "offers-and-promos",
-              "name": "Offers & promos",
-              "description": "Ride credits, discounts and referral rewards.",
-              "default_preference": "opt_in",
-              "default_opt_in_channels": ["email", "inbox"],
-              "default_mandatory_channels": null
-            },
-            {
-              "category": "local-updates",
-              "name": "Local updates",
-              "description": "Service changes and news in your city.",
+              "category": "feedback",
+              "name": "Feedback",
+              "description": "A quick how-was-it, the day after an order.",
               "default_preference": "opt_in",
               "default_opt_in_channels": ["email"],
               "default_mandatory_channels": null
@@ -78,30 +65,31 @@
           ]
         }
       ]
-    }
+    },
+    { "root_category": "promotional", "sections": [] }
   ],
 
-  "workvibe-northwind": [
+  "workvibe-nolans": [
     { "root_category": "system", "sections": [] },
     {
       "root_category": "transactional",
       "sections": [
         {
-          "name": "Your service",
-          "slug": "your-service",
+          "name": "Your orders",
+          "slug": "your-orders",
           "categories": [
             {
-              "category": "service-status",
-              "name": "Service status",
-              "description": "Outages, planned maintenance and restoration.",
+              "category": "order-updates",
+              "name": "Order updates",
+              "description": "Order confirmed, order ready, and status along the way.",
               "default_preference": "opt_in",
-              "default_opt_in_channels": ["email", "inbox"],
+              "default_opt_in_channels": ["inbox", "email"],
               "default_mandatory_channels": null
             },
             {
-              "category": "equipment-delivery",
-              "name": "Equipment delivery",
-              "description": "Router dispatch and delivery updates.",
+              "category": "receipts",
+              "name": "Receipts",
+              "description": "Your receipt after each paid order.",
               "default_preference": "opt_in",
               "default_opt_in_channels": ["email"],
               "default_mandatory_channels": null
@@ -115,7 +103,7 @@
             {
               "category": "getting-started",
               "name": "Getting started",
-              "description": "Welcome and account setup for new users.",
+              "description": "Welcome and account setup for new diners.",
               "default_preference": "opt_in",
               "default_opt_in_channels": ["email", "inbox"],
               "default_mandatory_channels": null
@@ -127,14 +115,6 @@
               "default_preference": "cant_unsubscribe",
               "default_opt_in_channels": ["email"],
               "default_mandatory_channels": ["email"]
-            },
-            {
-              "category": "billing",
-              "name": "Billing",
-              "description": "Invoices, payment failures and plan changes.",
-              "default_preference": "opt_in",
-              "default_opt_in_channels": ["email"],
-              "default_mandatory_channels": null
             }
           ]
         }
@@ -144,13 +124,13 @@
       "root_category": "promotional",
       "sections": [
         {
-          "name": "Product news",
-          "slug": "product-news-section",
+          "name": "Offers",
+          "slug": "offers-section",
           "categories": [
             {
-              "category": "product-news",
-              "name": "Product news",
-              "description": "New features, coverage and speed upgrades.",
+              "category": "offers",
+              "name": "Offers",
+              "description": "Deals and promo codes from Nolan's Pizza.",
               "default_preference": "opt_in",
               "default_opt_in_channels": ["email", "inbox"],
               "default_mandatory_channels": null

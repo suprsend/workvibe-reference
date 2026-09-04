@@ -1,6 +1,6 @@
 # WorkVibe
 
-A multi-tenant **customer-notification platform** built on [SuprSend](https://www.suprsend.com). WorkVibe lets an admin manage notification **templates** and **workflows**, **broadcast** to the whole subscriber list, deliver across **email, in-app inbox, and Slack**, manage **per-subscriber preferences**, and watch **executions** and **analytics** — all isolated per customer workspace.
+A multi-tenant **restaurant management platform** whose notification layer is built on [SuprSend](https://www.suprsend.com). WorkVibe is not a notifications product — SuprSend is; WorkVibe is the vertical SaaS on top. Its business customers are restaurant chains, and the people its notifications reach are those chains' diners. For each chain, an admin can manage notification **templates** and **workflows**, **broadcast** to the whole subscriber list, deliver across **email, in-app inbox, and Slack**, manage **per-subscriber preferences**, and watch **executions** and **analytics** — all isolated per customer workspace.
 
 It doubles as a reference implementation of the SuprSend management API, node SDK, embedded template editor, and React inbox/preference components in a real Next.js App Router app.
 
@@ -104,7 +104,7 @@ https://app.suprsend.com/en/<workspace-slug>/developers/api-keys
 
 The `<workspace-slug>` in that URL can differ per account — copy it from your browser's address bar when viewing the workspace.
 
-**7. Seed the content.** WorkVibe ships with a working set of branding, preference categories, templates, workflows and demo subscribers for each demo workspace — trip updates, receipts and ride offers for Loopride; outage, billing and equipment notifications plus product news for Northwind. This publishes all of it into your freshly-created workspaces, in the required order:
+**7. Seed the content.** WorkVibe ships with a working set of branding, preference categories, templates, workflows and demo subscribers for each demo workspace. Both demo customers are restaurant chains, so both get the same five default workflows — welcome, order confirmed, order ready, receipt, and sign-in alert — and each adds its own: a day-after feedback ask for Ember & Oak (casual dining, Austin); a delivery-arriving nudge and a broadcastable weekend deal for Nolan's Pizza (delivery-first, Denver). That standard-set-plus-additions shape is the point: real customers of one platform run mostly the same notifications and differ in small ways. This publishes all of it into your freshly-created workspaces, in the required order:
 
 ```bash
 node --env-file=.env.local scripts/provision.mjs all
@@ -120,7 +120,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Environment variables
 
-`<PREFIX>` is the workspace slug, uppercased with dashes → underscores — e.g. slug `workvibe-loopride` → `SUPRSEND_WORKVIBE_LOOPRIDE` (public vars are prefixed `NEXT_PUBLIC_`).
+`<PREFIX>` is the workspace slug, uppercased with dashes → underscores — e.g. slug `workvibe-emberoak` → `SUPRSEND_WORKVIBE_EMBEROAK` (public vars are prefixed `NEXT_PUBLIC_`).
 
 | Variable | Where to find it |
 |---|---|

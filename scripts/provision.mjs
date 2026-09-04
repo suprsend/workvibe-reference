@@ -422,7 +422,41 @@ async function cmdWorkflows() {
   }
 }
 
-// ── Command ──────────────────────────────────────────────────────────────────
+// ── Stage: brand ───────────────────────────────────────────────────────────────
+// Seed each workspace's `default` tenant — the brand templates resolve through
+// {{$brand.*}}. Left unseeded, the tenant keeps the name the SuprSend ACCOUNT was
+// created with, so every customer's mail is signed by the notification vendor
+// rather than the customer. Runs before `templates` for that reason.
+// Upsert merges, so fields the seed omits (logo, social links) keep whatever the
+// admin set in Brand Settings. Tenants live on the hub, not the Management API,
+// so like `users` this stage needs the per-workspace WORKSPACE_KEY/SECRET.
+async function cmdBrand() {
+  const { Suprsend } = await import("@suprsend/node-sdk");
+  const brands = readJson("seed-data/brands.json");
+
+  for (const { slug } of readWorkspaces()) {
+    const p = envPrefix(slug);
+    const key = process.env[`${p}_WORKSPACE_KEY`];
+    const secret = process.env[`${p}_WORKSPACE_SECRET`];
+    console.log(`\n=== ${slug} ===`);
+    if (!key || !secret) {
+      console.log(`  ✗ ${p}_WORKSPACE_KEY / _WORKSPACE_SECRET not set — paste them from the dashboard first`);
+      continue;
+    }
+    const brand = brands[slug];
+    if (!brand) {
+      console.log("  – no brand seeded for this workspace");
+      continue;
+    }
+    try {
+      await new Suprsend(key, secret).tenants.upsert("default", brand);
+      console.log(`  ✓ brand → ${brand.tenant_name}`);
+    } catch (e) {
+      console.log(`  ✗ ${e?.message ?? e}`);
+    }
+  }
+}
+
 // ── Stage: users ──────────────────────────────────────────────────────────────
 // Seeds the demo consumers. These stand in for people who signed up in the
 // CUSTOMER's own product, so this stage — not an admin typing into WorkVibe — is

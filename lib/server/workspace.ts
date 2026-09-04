@@ -12,7 +12,7 @@ export async function getActiveWorkspace(): Promise<Workspace> {
   return getWorkspace(isWorkspaceSlug(slug) ? slug : DEFAULT_WORKSPACE);
 }
 
-/** Env-var prefix for a workspace's server credentials. slug "workvibe-loopride" → "SUPRSEND_WORKVIBE_LOOPRIDE". */
+/** Env-var prefix for a workspace's server credentials. slug "workvibe-emberoak" → "SUPRSEND_WORKVIBE_EMBEROAK". */
 export function envPrefix(ws: Workspace): string {
   return `SUPRSEND_${ws.slug.replace(/-/g, "_").toUpperCase()}`;
 }

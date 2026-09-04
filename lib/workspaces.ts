@@ -4,7 +4,7 @@
 // + signing keys (read by server routes from env) drive the frontend SDKs.
 // Each customer = its own SuprSend workspace. Two accents max per workspace.
 
-export type WorkspaceSlug = "workvibe-loopride" | "workvibe-northwind";
+export type WorkspaceSlug = "workvibe-emberoak" | "workvibe-nolans";
 
 export interface Workspace {
   slug: WorkspaceSlug;
@@ -22,19 +22,19 @@ export interface Workspace {
 
 export const WORKSPACES: Workspace[] = [
   {
-    slug: "workvibe-loopride",
-    label: "Loopride",
-    fullName: "Loopride — Rider Communications",
-    initial: "L",
-    accent: "#0E9F6E",
+    slug: "workvibe-emberoak",
+    label: "Ember & Oak",
+    fullName: "Ember & Oak — Diner Communications",
+    initial: "E",
+    accent: "#9A3412",
     accentForeground: "#ffffff",
   },
   {
-    slug: "workvibe-northwind",
-    label: "Northwind",
-    fullName: "Northwind — Subscriber Communications",
+    slug: "workvibe-nolans",
+    label: "Nolan's Pizza",
+    fullName: "Nolan's Pizza — Diner Communications",
     initial: "N",
-    accent: "#1B4E8C",
+    accent: "#B91C1C",
     accentForeground: "#ffffff",
   },
 ];
