@@ -1,17 +1,17 @@
 {
-  "_comment": "Demo consumers per workspace. These stand in for people who signed up in the CUSTOMER's own product — Loopride's app, Northwind's checkout — not people an admin typed into WorkVibe. `provision.mjs users` upserts them and adds each one to the all-subscribers list; joining that list is what emits $USER_ENTERED_LIST and welcomes them, the way a real signup would. An existing member does not re-enter, so re-running never re-welcomes anyone. The first entry in each list is the preview recipient every template's mock_data points at; keep it. All addresses are @example.com (IANA-reserved, cannot receive mail).",
+  "_comment": "Demo consumers per workspace. These stand in for diners who signed up in the CUSTOMER's own product — Ember & Oak's app in Austin, Nolan's ordering site in Denver — not people an admin typed into WorkVibe. `provision.mjs users` upserts them and adds each one to the all-subscribers list; joining that list is what emits $USER_ENTERED_LIST and welcomes them, the way a real signup would. An existing member does not re-enter, so re-running never re-welcomes anyone. The first entry in each list is the preview recipient every template's mock_data points at; keep it. Sam Rivera appears in both rosters on purpose — one person can be a diner of two chains. All addresses are @example.com (IANA-reserved, cannot receive mail).",
 
-  "workvibe-loopride": [
-    { "distinct_id": "u_20388", "name": "Sam Rivera", "email": "sam@example.com" },
-    { "distinct_id": "u_20431", "name": "Aisha Khan", "email": "aisha@example.com" },
-    { "distinct_id": "u_20518", "name": "Diego Santos", "email": "diego@example.com" },
-    { "distinct_id": "u_20677", "name": "Mei Lin", "email": "mei@example.com" }
+  "workvibe-emberoak": [
+    { "distinct_id": "u_30214", "name": "Sam Rivera", "email": "sam@example.com" },
+    { "distinct_id": "u_30377", "name": "Jordan Ellis", "email": "jordan@example.com" },
+    { "distinct_id": "u_30542", "name": "Nia Thompson", "email": "nia@example.com" },
+    { "distinct_id": "u_30698", "name": "Alex Kim", "email": "alex@example.com" }
   ],
 
-  "workvibe-northwind": [
-    { "distinct_id": "u_51166", "name": "Sam Rivera", "email": "sam@example.com" },
-    { "distinct_id": "u_51204", "name": "Tom Fletcher", "email": "tom@example.com" },
-    { "distinct_id": "u_51339", "name": "Priya Nair", "email": "priya@example.com" },
-    { "distinct_id": "u_51482", "name": "Jonas Weber", "email": "jonas@example.com" }
+  "workvibe-nolans": [
+    { "distinct_id": "u_60119", "name": "Sam Rivera", "email": "sam@example.com" },
+    { "distinct_id": "u_60253", "name": "Maya Castillo", "email": "maya@example.com" },
+    { "distinct_id": "u_60408", "name": "Ben Okafor", "email": "ben@example.com" },
+    { "distinct_id": "u_60571", "name": "Lucy Tran", "email": "lucy@example.com" }
   ]
 }

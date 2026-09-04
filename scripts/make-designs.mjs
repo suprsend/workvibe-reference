@@ -2,8 +2,8 @@
 //
 //   node scripts/make-designs.mjs
 //
-// The base is suprsend/templates/ride-credit-offer/email/default/ — pulled out of
-// SuprSend with scripts/pull-design.mjs. Every other template is that design with
+// The base is suprsend/templates/_base/email/default/ — pulled out of SuprSend
+// with scripts/pull-design.mjs. Every other template is that design with
 // three strings swapped: the heading, the paragraph, and the button label (taken
 // from `heading` / `paragraph` / `button` in seed-data/templates.json).
 //
@@ -22,7 +22,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const BASE = resolve(ROOT, "suprsend/templates/ride-credit-offer/email/default");
+const BASE = resolve(ROOT, "suprsend/templates/_base/email/default");
 const die = (m) => { console.error(`✗ ${m}`); process.exit(1); };
 
 const baseHtml = readFileSync(resolve(BASE, "body.designer.html"), "utf8");
@@ -105,4 +105,4 @@ for (const [ws, list] of Object.entries(templates)) {
     console.log(`  ✓ ${ws}/${t.slug}`);
   }
 }
-console.log(`\n${written} designs generated from ${"ride-credit-offer"}.`);
+console.log(`\n${written} designs generated from the _base design.`);

@@ -422,7 +422,41 @@ async function cmdWorkflows() {
   }
 }
 
-// ── Command ──────────────────────────────────────────────────────────────────
+// ── Stage: brand ───────────────────────────────────────────────────────────────
+// Seed each workspace's `default` tenant — the brand templates resolve through
+// {{$brand.*}}. Left unseeded, the tenant keeps the name the SuprSend ACCOUNT was
+// created with, so every customer's mail is signed by the notification vendor
+// rather than the customer. Runs before `templates` for that reason.
+// Upsert merges, so fields the seed omits (logo, social links) keep whatever the
+// admin set in Brand Settings. Tenants live on the hub, not the Management API,
+// so like `users` this stage needs the per-workspace WORKSPACE_KEY/SECRET.
+async function cmdBrand() {
+  const { Suprsend } = await import("@suprsend/node-sdk");
+  const brands = readJson("seed-data/brands.json");
+
+  for (const { slug } of readWorkspaces()) {
+    const p = envPrefix(slug);
+    const key = process.env[`${p}_WORKSPACE_KEY`];
+    const secret = process.env[`${p}_WORKSPACE_SECRET`];
+    console.log(`\n=== ${slug} ===`);
+    if (!key || !secret) {
+      console.log(`  ✗ ${p}_WORKSPACE_KEY / _WORKSPACE_SECRET not set — paste them from the dashboard first`);
+      continue;
+    }
+    const brand = brands[slug];
+    if (!brand) {
+      console.log("  – no brand seeded for this workspace");
+      continue;
+    }
+    try {
+      await new Suprsend(key, secret).tenants.upsert("default", brand);
+      console.log(`  ✓ brand → ${brand.tenant_name}`);
+    } catch (e) {
+      console.log(`  ✗ ${e?.message ?? e}`);
+    }
+  }
+}
+
 // ── Stage: users ──────────────────────────────────────────────────────────────
 // Seeds the demo consumers. These stand in for people who signed up in the
 // CUSTOMER's own product, so this stage — not an admin typing into WorkVibe — is
@@ -442,17 +476,30 @@ const SUBSCRIBERS_LIST = "all-subscribers";
 
 // create() is an upsert, so this both creates the list and keeps its settings correct on
 // re-runs. `track_user_entry` is what makes SuprSend emit `$USER_ENTERED_LIST - <list_id>`;
-// without it the list-entry workflow can never fire, and nothing surfaces that — the list
-// simply sits there. Setting it here means no dashboard step to deploy this app.
+// without it the list-entry welcome workflow can never fire. The hub API accepts the field
+// but silently ignores it (verified: create() echoes back track_user_entry: false, and no
+// PATCH/PUT exists on /v1/subscriber_list/), so it can only be enabled from the dashboard —
+// and it must be ON BEFORE members join: an existing member never re-enters, so anyone who
+// joined while it was off is never welcomed, even after enabling it. Hence the loud check.
 async function ensureList(client) {
   await client.subscriber_lists
     .create({
       list_id: SUBSCRIBERS_LIST,
       list_name: "All subscribers",
       list_description: "Every consumer in this workspace — the broadcast audience.",
-      track_user_entry: true,
+      track_user_entry: true, // sent, but ignored by the API — see the check below
     })
     .catch(() => {});
+  try {
+    const list = await client.subscriber_lists.get(SUBSCRIBERS_LIST);
+    if (!list?.track_user_entry) {
+      console.log(`  ⚠ "${SUBSCRIBERS_LIST}" has user-entry tracking OFF — the welcome workflow will NOT fire.`);
+      console.log("    Enable it on the list in the SuprSend dashboard BEFORE seeding users; members who");
+      console.log("    joined while it was off never fire $USER_ENTERED_LIST and are never welcomed.");
+    }
+  } catch {
+    // best-effort check only — never block seeding on it
+  }
 }
 
 async function cmdUsers() {
