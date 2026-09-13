@@ -13,7 +13,10 @@ import { CHANNEL_ICON, CHANNEL_LABEL } from "@/lib/message-display";
 
 // Channels the workspace authors templates for. (Only channels with a connected
 // vendor actually reach users — Email today; Inbox once enabled in SuprSend.)
-const CHANNELS = ["email", "inbox"];
+// This is only the floor: any other channel the live tree already uses (set from
+// the SuprSend dashboard) gets a toggle too, so its state is visible and editable
+// here rather than silently carried along.
+const BASE_CHANNELS = ["email", "inbox"];
 
 // Plain-English: what the DEFAULT subscription state is for a new user, and
 // whether they're allowed to change it. (SuprSend: opt_in / opt_out / cant_unsubscribe.)
@@ -70,14 +73,19 @@ function Body() {
 
   // Auto-save: every change persists immediately (no Save button). The fetch fires
   // synchronously on the user action — not debounced — so navigating away can't drop
-  // a write. `original` tracks the last-saved state to show a "Saved" indicator.
-  function commit(next: Row[]) {
+  // a write. Only the CHANGED category is sent: the server re-reads the live tree
+  // and applies edits by slug, so scoping the edit to one row means a category
+  // edited in the SuprSend dashboard after this page loaded is left alone instead
+  // of being overwritten with this page's stale copy.
+  // `original` tracks the last-saved state to show a "Saved" indicator.
+  function commit(next: Row[], changed: string) {
     setRows(next);
-    void saveRows(next);
+    const row = next.find((r) => r.category === changed);
+    if (row) void saveRows([row], next);
   }
   function update(slug: string, patch: Partial<Row>) {
     if (!rows) return;
-    commit(rows.map((r) => (r.category === slug ? { ...r, ...patch } : r)));
+    commit(rows.map((r) => (r.category === slug ? { ...r, ...patch } : r)), slug);
   }
   function toggleChannel(slug: string, ch: string) {
     if (!rows) return;
@@ -87,10 +95,11 @@ function Body() {
           ? { ...r, channels: r.channels.includes(ch) ? r.channels.filter((c) => c !== ch) : [...r.channels, ch] }
           : r,
       ),
+      slug,
     );
   }
 
-  async function saveRows(rs: Row[]) {
+  async function saveRows(rs: Row[], all: Row[]) {
     setSaving(true);
     try {
       const edits = rs.map((r) => ({
@@ -105,7 +114,7 @@ function Body() {
         body: JSON.stringify({ edits }),
       });
       const data = await res.json();
-      if (data.ok) setOriginal(JSON.stringify(rs));
+      if (data.ok) setOriginal(JSON.stringify(all));
       else toast.error("Couldn’t save", { description: data.error });
     } catch {
       toast.error("Couldn’t reach SuprSend.");
@@ -114,6 +123,15 @@ function Body() {
     }
   }
   const savedUp = rows !== null && JSON.stringify(rows) === original;
+
+  // The toggles offered: the base channels plus any other channel the live tree
+  // already delivers on — a channel added from the SuprSend dashboard shows up
+  // here instead of being invisible.
+  const channelSet = React.useMemo(() => {
+    const extras = new Set<string>();
+    for (const r of rows ?? []) for (const ch of r.channels) if (!BASE_CHANNELS.includes(ch)) extras.add(ch);
+    return [...BASE_CHANNELS, ...[...extras].sort()];
+  }, [rows]);
 
   const byRoot = React.useMemo(() => {
     const groups: Record<string, Row[]> = {};
@@ -197,7 +215,7 @@ function Body() {
                           <span className="text-xs text-muted-foreground">
                             {r.preference === "cant_unsubscribe" ? "Mandatory channels" : "Default channels · new users"}
                           </span>
-                          {CHANNELS.map((ch) => {
+                          {channelSet.map((ch) => {
                             const Icon = CHANNEL_ICON[ch];
                             return (
                               <label key={ch} className="flex items-center gap-1.5 text-xs">
