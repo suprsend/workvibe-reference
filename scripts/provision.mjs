@@ -62,7 +62,9 @@ function requiredVars(slug) {
   const p = envPrefix(slug);
   const pub = publicPrefix(slug);
   return [
-    { name: `${p}_WORKSPACE_KEY`, note: "Workspace Key (Developers → API Keys → Workspace Key and Secret)" },
+    // The Workspace Key equals the workspace UID that GET /v1/workspace/ returns,
+    // so `workspaces` fills it automatically. Everything else is dashboard-only.
+    { name: `${p}_WORKSPACE_KEY`, note: "Workspace Key — auto-filled by provision.mjs (equals the workspace UID)", auto: true },
     { name: `${p}_WORKSPACE_SECRET`, note: "Workspace Secret (same section; dashboard-only)" },
     { name: `${p}_SIGNING_KEY_UID`, note: 'Signing Key UID (signing_key_…) — NOT the ID (ws_signk_…)' },
     { name: `${p}_SIGNING_KEY_B64`, note: "Signing key PEM, base64-encoded (see README)" },
@@ -123,16 +125,33 @@ function existingEnvNames() {
   return names;
 }
 
-function appendMissing(slug, present) {
+function appendMissing(slug, present, values = {}) {
   const missing = requiredVars(slug).filter((v) => !present.has(v.name));
   if (missing.length === 0) return 0;
   const block =
     `\n# ── Workspace: ${slug} (added by provision.mjs — paste values from the dashboard) ──\n` +
-    missing.map((v) => `# ${v.note}\n${v.name}=`).join("\n") +
+    missing.map((v) => `# ${v.note}\n${v.name}=${values[v.name] ?? ""}`).join("\n") +
     "\n";
   appendFileSync(ENV_LOCAL, block);
   missing.forEach((v) => present.add(v.name));
-  return missing.length;
+  return missing.filter((v) => !values[v.name]).length;
+}
+
+// Fill `NAME=` lines that are still EMPTY with a known value. A non-empty value —
+// whatever it is — is the user's and is never touched, so re-runs are safe.
+function fillEmptyEnv(name, value) {
+  if (!value || !existsSync(ENV_LOCAL)) return false;
+  const lines = readFileSync(ENV_LOCAL, "utf8").split("\n");
+  let filled = false;
+  const next = lines.map((line) => {
+    if (new RegExp(`^\\s*${name}\\s*=\\s*$`).test(line)) {
+      filled = true;
+      return `${name}=${value}`;
+    }
+    return line;
+  });
+  if (filled) writeFileSync(ENV_LOCAL, next.join("\n"));
+  return filled;
 }
 
 // ── Stage: workspaces ─────────────────────────────────────────────────────────
@@ -144,6 +163,7 @@ async function cmdWorkspaces() {
   const bySlug = new Map(existing.map((w) => [w.slug, w]));
   const byName = new Map(existing.map((w) => [w.name, w]));
 
+  const uids = new Map();
   for (const { slug, description } of targets) {
     let ws = bySlug.get(slug) || byName.get(slug);
     if (ws) {
@@ -152,15 +172,25 @@ async function cmdWorkspaces() {
       ws = await createWorkspace(slug, description);
       console.log(`＋ ${slug} — created (uid ${ws.uid ?? "?"})`);
     }
+    if (ws?.uid) uids.set(slug, ws.uid);
   }
 
   console.log("\nUpdating .env.local …");
   const present = existingEnvNames();
   let total = 0;
   for (const { slug } of targets) {
-    const added = appendMissing(slug, present);
+    // The dashboard "Workspace Key" IS the workspace UID, so it never needs a
+    // manual paste: new lines are written with it, and an existing-but-empty
+    // line is filled in place. Non-empty values are never touched.
+    const keyName = `${envPrefix(slug)}_WORKSPACE_KEY`;
+    const hadKeyLine = present.has(keyName);
+    const added = appendMissing(slug, present, { [keyName]: uids.get(slug) });
+    const filled = fillEmptyEnv(keyName, uids.get(slug));
     total += added;
-    console.log(added ? `  ${slug}: added ${added} missing line(s)` : `  ${slug}: all vars present`);
+    const notes = [];
+    if (added) notes.push(`added ${added} line(s) to fill`);
+    if (filled || (!hadKeyLine && uids.get(slug))) notes.push("workspace key auto-filled");
+    console.log(`  ${slug}: ${notes.length ? notes.join(", ") : "all vars present"}`);
   }
   console.log(
     total > 0
