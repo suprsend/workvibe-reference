@@ -1,6 +1,6 @@
 // SuprSend Management API client.
 // One account-level Service Token (account-scoped); the workspace is the URL path
-// segment. Workflows live under v1, templates under v2 (verified — see BUILD_NOTES.md).
+// segment. Workflows live under v1, templates under v2 (verified against the live API).
 import "server-only";
 import type { WorkspaceSlug } from "@/lib/workspaces";
 
