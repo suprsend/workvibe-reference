@@ -1,0 +1,17 @@
+{
+  "actor_distinct_id": null,
+  "actor_object": null,
+  "actor_sub_type": "user",
+  "batch_count": 1,
+  "is_batch": false,
+  "payload": {
+    "device": "iPhone 15",
+    "location": "Chicago, IL",
+    "security_url": "https://example.com/security",
+    "sign_in_time": "9:42 AM"
+  },
+  "recipient_distinct_id": "u_60119",
+  "recipient_object": null,
+  "recipient_sub_type": "user",
+  "tenant_id": "default"
+}

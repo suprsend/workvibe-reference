@@ -1,0 +1,1 @@
+Order {{order_number}} — estimated for {{ready_time}}.

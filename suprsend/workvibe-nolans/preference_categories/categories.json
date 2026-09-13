@@ -1,0 +1,116 @@
+{
+  "$schema": "https://schema.suprsend.com/preference_category/v1/schema.json",
+  "root_categories": [
+    {
+      "root_category": "system",
+      "sections": []
+    },
+    {
+      "root_category": "transactional",
+      "sections": [
+        {
+          "name": "Your orders",
+          "description": "",
+          "tags": null,
+          "categories": [
+            {
+              "category": "order-updates",
+              "name": "Order updates",
+              "description": "Order confirmed, order ready, and status along the way.",
+              "default_preference": "opt_in",
+              "default_mandatory_channels": null,
+              "default_opt_in_channels": [
+                "inbox",
+                "email"
+              ],
+              "tags": null,
+              "digest_schedule": null,
+              "properties": null
+            },
+            {
+              "category": "receipts",
+              "name": "Receipts",
+              "description": "Your receipt after each paid order.",
+              "default_preference": "opt_in",
+              "default_mandatory_channels": null,
+              "default_opt_in_channels": [
+                "email"
+              ],
+              "tags": null,
+              "digest_schedule": null,
+              "properties": null
+            }
+          ],
+          "mandatory_channels": null,
+          "default_preference": ""
+        },
+        {
+          "name": "Your account",
+          "description": "",
+          "tags": null,
+          "categories": [
+            {
+              "category": "getting-started",
+              "name": "Getting started",
+              "description": "Welcome and account setup for new diners.",
+              "default_preference": "opt_in",
+              "default_mandatory_channels": null,
+              "default_opt_in_channels": [
+                "email",
+                "inbox"
+              ],
+              "tags": null,
+              "digest_schedule": null,
+              "properties": null
+            },
+            {
+              "category": "account-security",
+              "name": "Account security",
+              "description": "Sign-ins and password changes. Always on.",
+              "default_preference": "cant_unsubscribe",
+              "default_mandatory_channels": [
+                "email"
+              ],
+              "default_opt_in_channels": [
+                "email"
+              ],
+              "tags": null,
+              "digest_schedule": null,
+              "properties": null
+            }
+          ],
+          "mandatory_channels": null,
+          "default_preference": ""
+        }
+      ]
+    },
+    {
+      "root_category": "promotional",
+      "sections": [
+        {
+          "name": "Offers",
+          "description": "",
+          "tags": null,
+          "categories": [
+            {
+              "category": "offers",
+              "name": "Offers",
+              "description": "Deals and promo codes from Nolan's Pizza.",
+              "default_preference": "opt_in",
+              "default_mandatory_channels": null,
+              "default_opt_in_channels": [
+                "email",
+                "inbox"
+              ],
+              "tags": null,
+              "digest_schedule": null,
+              "properties": null
+            }
+          ],
+          "mandatory_channels": null,
+          "default_preference": ""
+        }
+      ]
+    }
+  ]
+}

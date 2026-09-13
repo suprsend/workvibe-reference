@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.suprsend.com/workflow/v1/schema.json",
+  "active_at": "2026-09-13T21:02:52.407695Z",
+  "category": "order-updates",
+  "commit_message": "Seeded by provision.mjs",
+  "conditions": [],
+  "created_at": "2026-09-13T21:02:52.213854Z",
+  "description": "Confirms the order the moment it lands.",
+  "hash": "9eef8d31e6d3ab857ca7646c6d35b181c2407305e87429a9d28486760ff597ea",
+  "is_enabled": true,
+  "last_executed_at": null,
+  "name": "Order Confirmed",
+  "override_actor_user_expr": null,
+  "override_recipients_single_object_fields_expr": null,
+  "override_recipients_type": null,
+  "override_recipients_user_expr": null,
+  "override_tenant_expr": null,
+  "payload_schema": null,
+  "ratelimit": null,
+  "slug": "order-confirmed",
+  "status": "active",
+  "tags": [],
+  "tree": {
+    "nodes": [
+      {
+        "description": null,
+        "name": "Multi-Channel",
+        "node_type": "send_multi_channel",
+        "properties": {
+          "channels_expr": null,
+          "success": "seen",
+          "success_is_event": false,
+          "template": "order-confirmed"
+        },
+        "ref": "n_1",
+        "schema_version": "1"
+      }
+    ]
+  },
+  "trigger_events": [
+    "ORDER_CONFIRMED"
+  ],
+  "trigger_type": "event",
+  "updated_at": "2026-09-13T21:02:52.407844Z",
+  "updated_by": {
+    "email": "org_01M0C93BHQ9XQYBC0287TWNBRQ@systemuser.suprsend.com",
+    "name": "System User"
+  },
+  "validation_result": {
+    "is_valid": true
+  }
+}

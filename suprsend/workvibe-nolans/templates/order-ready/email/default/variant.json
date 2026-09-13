@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.suprsend.com/template/v2/variant_schema.json",
+  "action": "added",
+  "approval_at": "2026-09-13T21:02:40.327131Z",
+  "approval_status": "auto_approved",
+  "channel": "email",
+  "conditions": [],
+  "content": {
+    "$schema": "https://schema.suprsend.com/template/v2/channel/email_schema.json",
+    "bcc": "",
+    "body": {
+      "designer": {
+        "design_json": "@body.designer.json",
+        "display_conditions": [],
+        "html": "@body.designer.html",
+        "merge_tags": [],
+        "text": ""
+      },
+      "email_markup": "",
+      "plain_text": null,
+      "preheader": "",
+      "raw": null,
+      "type": "designer"
+    },
+    "cc": "",
+    "extra_to": "",
+    "from_address": "",
+    "from_name": "",
+    "reply_to": "",
+    "subject": "{{{$recipient.name}}}, your order is ready",
+    "templating_language": "handlebars"
+  },
+  "created_at": "2026-09-13T21:02:40.994793Z",
+  "discard_comment": null,
+  "errors": {},
+  "has_error": false,
+  "hash": "6e6b985d2ed17dce41a5eac2300aade72eae15bc62353f767d5256e147db0087",
+  "id": "default",
+  "locale": "en",
+  "needs_vendor_approval": false,
+  "seq_no": 1,
+  "sysgen_template_name": null,
+  "tenant_id": null,
+  "vendor_approvals": []
+}

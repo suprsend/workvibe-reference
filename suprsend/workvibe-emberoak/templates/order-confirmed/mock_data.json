@@ -1,0 +1,17 @@
+{
+  "actor_distinct_id": null,
+  "actor_object": null,
+  "actor_sub_type": "user",
+  "batch_count": 1,
+  "is_batch": false,
+  "payload": {
+    "order_number": "4712",
+    "order_total": "$32.40",
+    "order_url": "https://example.com/order/4712",
+    "ready_time": "7:05 PM"
+  },
+  "recipient_distinct_id": "u_30214",
+  "recipient_object": null,
+  "recipient_sub_type": "user",
+  "tenant_id": "default"
+}

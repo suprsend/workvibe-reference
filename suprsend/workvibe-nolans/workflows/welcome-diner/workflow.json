@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.suprsend.com/workflow/v1/schema.json",
+  "active_at": "2026-09-13T21:02:54.992030Z",
+  "category": "getting-started",
+  "commit_message": "Seeded by provision.mjs",
+  "conditions": [],
+  "created_at": "2026-09-13T21:02:54.768472Z",
+  "description": "Welcomes a diner when they join the all-subscribers list — SuprSend emits $USER_ENTERED_LIST once the list has track_user_entry on, so joining the list IS the signup moment. One run per person joining, unlike a broadcast to the same list, which sends once to everyone. Its template templates on $recipient and $brand only: SuprSend emits this event, not the app, so there is no payload to carry custom variables.",
+  "hash": "e0d1e78632586ed03b3caa5a8ad1a86e32df5c29a6181244d9bdba84d8f8af5b",
+  "is_enabled": true,
+  "last_executed_at": null,
+  "name": "Welcome Diner",
+  "override_actor_user_expr": null,
+  "override_recipients_single_object_fields_expr": null,
+  "override_recipients_type": null,
+  "override_recipients_user_expr": null,
+  "override_tenant_expr": null,
+  "payload_schema": null,
+  "ratelimit": null,
+  "slug": "welcome-diner",
+  "status": "active",
+  "tags": [],
+  "tree": {
+    "nodes": [
+      {
+        "description": null,
+        "name": "Multi-Channel",
+        "node_type": "send_multi_channel",
+        "properties": {
+          "channels_expr": null,
+          "success": "seen",
+          "success_is_event": false,
+          "template": "welcome-diner"
+        },
+        "ref": "n_1",
+        "schema_version": "1"
+      }
+    ]
+  },
+  "trigger_events": [
+    "$USER_ENTERED_LIST - all-subscribers"
+  ],
+  "trigger_type": "event",
+  "updated_at": "2026-09-13T21:02:54.992179Z",
+  "updated_by": {
+    "email": "org_01M0C93BHQ9XQYBC0287TWNBRQ@systemuser.suprsend.com",
+    "name": "System User"
+  },
+  "validation_result": {
+    "is_valid": true
+  }
+}
