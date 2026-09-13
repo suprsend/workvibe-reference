@@ -18,7 +18,7 @@ It doubles as a reference implementation of the SuprSend management API, node SD
 | **Analytics** | Delivery/open funnel, by-channel and by-template/workflow breakdowns, opt-out metrics. |
 | **Broadcast** | Send one promotional template to every subscriber on the `all-subscribers` list in a single call. |
 | **Preferences** | Workspace defaults + per-subscriber category/channel preferences, with "required" (non-unsubscribable) categories. |
-| **Users** | Live SuprSend subscribers — add/edit/remove, role, preferences, delivery log. |
+| **Users** | Live SuprSend subscribers — add/remove, per-subscriber preferences, delivery log. |
 | **Branding** | Per-workspace tenant brand (logo, colours) applied to emails and the inbox. |
 | **Multi-tenant** | Each workspace is its own isolated SuprSend workspace; switch in the top bar. |
 
@@ -97,7 +97,7 @@ node --env-file=.env.local scripts/provision.mjs workspaces
 
 > This step must run — and succeed — **before** step 6. A workspace's API Keys page in the dashboard doesn't exist until the workspace itself exists; there is nothing to copy keys from until this command creates (or confirms) the workspace.
 
-**6. Fill in the per-workspace keys.** *Only after step 5 has created/confirmed the workspaces:* for each one, open its API Keys page and paste the values into the matching blank lines step 5 just added in `.env.local` (see the table below):
+**6. Fill in the per-workspace keys.** Step 5 already filled each `<PREFIX>_WORKSPACE_KEY` (it equals the workspace UID, which the API returns). The remaining values exist only in the dashboard: for each workspace, open its API Keys page and paste the secret, signing key and public key into the blank lines step 5 added in `.env.local` (see the table below):
 
 ```
 https://app.suprsend.com/en/<workspace-slug>/developers/api-keys
@@ -128,6 +128,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+**Optional — deploy.** The app deploys like any Next.js app (set the same env vars on the host). Set `DEMO_PASSWORD` so the whole demo sits behind one shared password — and remember a deployed demo talks to your **real** SuprSend account: anyone past the gate is sending real notifications from your workspaces.
+
 ### Environment variables
 
 `<PREFIX>` is the workspace slug, uppercased with dashes → underscores — e.g. slug `workvibe-emberoak` → `SUPRSEND_WORKVIBE_EMBEROAK` (public vars are prefixed `NEXT_PUBLIC_`).
@@ -152,9 +154,9 @@ To base64-encode the signing key PEM for `<PREFIX>_SIGNING_KEY_B64`:
 base64 -i signing-key.pem | tr -d '\n'
 ```
 
-> **Note — workspace creation.** Step 5 is idempotent: it lists existing workspaces first and reuses them by name, so re-running never duplicates. It creates the *workspace* only — not the public/signing/API keys, because those dashboard values don't map 1:1 to the app's variables (the Workspace Key+Secret is the SDK's HMAC pair, distinct from the REST "API Key," which the app does not use). Create the workspace with the script; paste the keys yourself.
+> **Note — workspace creation.** Step 5 is idempotent: it lists existing workspaces first and reuses them by name, so re-running never duplicates, and it never overwrites an env value you've already filled. It auto-fills only the Workspace Key; the secret, signing key and public key are shown once in the dashboard and returned by no API, so those stay manual pastes.
 >
-> **Note — content seeding.** Step 7's categories, templates, and workflows are ported verbatim from the working set this app was built and tested against — not placeholder copy. All three stages publish through the same commit flow the app itself uses, so re-running them is safe.
+> **Note — the reference assets.** The kit under `suprsend/<workspace>/` is a starter, not a contract: push it, replace it, or ignore it and build everything in the dashboard — the app reads the account either way. The files themselves were pulled from live workspaces with the CLI, so they are exactly what `pull` produces. Re-running `npm run push:assets` is safe: an unchanged asset commits as a no-op, and a dashboard edit you haven't pulled back is overwritten only for the assets the kit also defines — pull first if you want to keep dashboard edits.
 >
 > **Note — the list-entry welcome.** The hub API silently ignores `track_user_entry` when provisioning creates the `all-subscribers` list, and offers no call to change it afterwards — the flag can only be enabled from the list's page in the dashboard. Do that **before** running `provision.mjs users`: a member who joins while tracking is off never emits `$USER_ENTERED_LIST`, is never welcomed, and won't re-enter on a re-run. The `users` stage checks the flag and warns when it's off.
 >
@@ -166,9 +168,16 @@ Workspaces are declared in `lib/workspaces.ts`. Add an entry there, re-run the p
 
 ---
 
-## SuprSend API reference
+## SuprSend integration notes
 
-[`BUILD_NOTES.md`](BUILD_NOTES.md) documents the SuprSend endpoints this app uses — templates (v2), workflows (v1), categories, and the hub/node-SDK surface — with verified request shapes and gotchas.
+Everything the app does rides on four SuprSend surfaces (all request shapes verified against the live API):
+
+- **Templates — management API v2** (`/v2/{ws}/template/…`, account `ServiceToken`): list/get, metadata + per-channel variant writes, and a `PATCH …/commit/` that publishes a draft live. `lib/suprsend-mgmt.ts` is the app's client; the same objects live on disk as the CLI files under `suprsend/<workspace>/templates/`.
+- **Workflows — management API v1** (`/v1/{ws}/workflow/{slug}/?commit=true`): one POST publishes the whole definition. The app's AI-authoring flow publishes a workflow's templates first, then the workflow, so a half-published journey can't go live.
+- **Preference categories — management API v1** (`/v1/{ws}/preference_category/`): reads return the full three-root tree (system / transactional / promotional); writes are a POST of the **full tree** back (PATCH/PUT return 405), which is why the app re-reads live state and merges edits by slug before saving.
+- **Hub — node SDK** (`hub.suprsend.com`, per-workspace key + secret): users, tenants/brand, lists, triggers, broadcasts, and per-subscriber preferences. This is the data plane — the CLI has no commands for it, which is exactly the split between `npm run push:assets` (assets, CLI) and `scripts/provision.mjs` (data, SDK/API).
+
+Gotchas that cost real debugging time are documented where they bite, as comments in `lib/server/*` and the scripts — e.g. the workspace-level flag without which subscriber preferences silently omit the inbox channel (`scripts/push-assets.mjs`), and the `track_user_entry` flag the hub API accepts but ignores (`scripts/provision.mjs`).
 
 ---
 

@@ -2,7 +2,7 @@
 // One fetch, shaped two ways:
 //   • Executions — messages grouped by idempotency_key (one trigger = one run).
 //   • Analytics  — funnel counts (sent → delivered → opened, plus failed).
-// Verified shape (BUILD_NOTES): each message carries idempotency_key, execution_id,
+// Verified shape (live API): each message carries idempotency_key, execution_id,
 // status, channel, per-stage timestamps, and nested workflow/template objects.
 import "server-only";
 import type { Workspace } from "@/lib/workspaces";
