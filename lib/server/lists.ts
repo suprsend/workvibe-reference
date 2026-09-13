@@ -65,11 +65,28 @@ async function fetchMembers(ws: Workspace, listId: string): Promise<RawMember[]>
   return out;
 }
 
-export async function getSubscriberList(ws: Workspace, listId: string): Promise<SubscriberList> {
+interface RawList {
+  list_id: string;
+  list_name?: string;
+  list_description?: string | null;
+  track_user_entry?: boolean;
+}
+
+/**
+ * Every list in the workspace — whatever exists in the account, not a fixed id.
+ * A list created in the SuprSend dashboard shows up here on the next load.
+ */
+export async function listSubscriberLists(ws: Workspace): Promise<SubscriberList[]> {
+  const res = (await client(ws).subscriber_lists.get_all({ limit: 100 })) as { results?: RawList[] };
+  const users = await listUsers(ws);
+  return Promise.all((res.results ?? []).map((raw) => getSubscriberList(ws, raw.list_id, users)));
+}
+
+export async function getSubscriberList(ws: Workspace, listId: string, roster?: WorkUser[]): Promise<SubscriberList> {
   const [raw, members, users] = await Promise.all([
     client(ws).subscriber_lists.get(listId) as Promise<Record<string, unknown>>,
     fetchMembers(ws, listId),
-    listUsers(ws),
+    roster ?? listUsers(ws),
   ]);
   const byId = new Map(users.map((u) => [u.distinctId, u]));
 
