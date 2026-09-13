@@ -5,7 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Megaphone, Send, SquareArrowOutUpRight, Tag, Users } from "lucide-react";
 import { useWorkspace } from "@/components/providers";
-import { resolveBroadcastCategory } from "@/lib/broadcast";
+import { findCategory } from "@/lib/broadcast";
 import { PageHeader } from "@/components/shared/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,6 @@ interface BroadcastTemplateOption {
   slug: string;
   name: string;
   description: string;
-  category: string;
 }
 interface CategoryOption {
   category: string;
@@ -44,6 +43,9 @@ function Body() {
   const [options, setOptions] = React.useState<Options | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [slug, setSlug] = React.useState("");
+  // No preselected category: it decides whose opt-outs apply, so the sender
+  // must pick it deliberately per broadcast.
+  const [categorySlug, setCategorySlug] = React.useState("");
   const [confirming, setConfirming] = React.useState(false);
   const [sending, setSending] = React.useState(false);
 
@@ -74,7 +76,7 @@ function Body() {
   }, []);
 
   const template = options?.templates.find((t) => t.slug === slug) ?? null;
-  const category = resolveBroadcastCategory(template, options?.categories ?? []);
+  const category = findCategory(categorySlug, options?.categories ?? []);
 
   async function send() {
     if (!template || !category) return;
@@ -123,8 +125,8 @@ function Body() {
       ) : options.templates.length === 0 ? (
         <EmptyState
           icon={Megaphone}
-          title="No broadcast templates yet"
-          description="A broadcast sends a promotional template to the whole subscriber list. Publish one for this workspace and it shows up here."
+          title="No templates yet"
+          description="A broadcast sends one template to the whole subscriber list. Publish a template for this workspace — here, or in the SuprSend dashboard — and it shows up here."
         />
       ) : (
         <div className="max-w-2xl space-y-5">
@@ -152,28 +154,45 @@ function Body() {
             {template?.description && (
               <p className="text-xs text-muted-foreground">{template.description}</p>
             )}
+            <p className="text-xs text-muted-foreground">
+              Everyone on the list gets the same content — a template whose variables differ per person
+              belongs in a workflow, not a broadcast.
+            </p>
           </Field>
 
           <Field label="Category">
-            {category ? (
+            {options.categories.length === 0 ? (
+              <p className="text-xs text-destructive">
+                This workspace has no promotional categories, and a broadcast can only send on one —
+                add a promotional category in Preference defaults (or the SuprSend dashboard) first.
+              </p>
+            ) : (
               <>
-                <p className="flex flex-wrap items-center gap-2 text-sm">
-                  <span className="flex items-center gap-1.5">
-                    <Tag className="size-3.5 text-muted-foreground" /> {category.name}
-                  </span>
-                  <Badge variant="outline">Promotional</Badge>
-                </p>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={categorySlug}
+                    onChange={(e) => setCategorySlug(e.target.value)}
+                    className="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-2 text-sm"
+                  >
+                    <option value="" disabled>
+                      Choose a category…
+                    </option>
+                    {options.categories.map((c) => (
+                      <option key={c.category} value={c.category}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Badge variant="outline" className="shrink-0 gap-1">
+                    <Tag className="size-3" /> Promotional
+                  </Badge>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Set by the template. Promotional only — subscribers opted out of this category won’t
-                  receive it.
+                  The category decides whose opt-outs apply — subscribers opted out of it won’t receive
+                  this. Only promotional categories are offered: a broadcast on a transactional or
+                  system category would hold up that category’s other traffic.
                 </p>
               </>
-            ) : (
-              <p className="text-xs text-destructive">
-                This template is registered under <code>{template?.category}</code>, which isn’t a
-                promotional category in this workspace — so there is nothing it can legally send under.
-                Add or rename it in Preference defaults first.
-              </p>
             )}
           </Field>
 

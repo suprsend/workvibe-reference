@@ -3,18 +3,19 @@ import { errMsg } from "@/lib/server/http";
 import { getActiveWorkspace } from "@/lib/server/workspace";
 import { broadcastToList, type BroadcastChannel } from "@/lib/server/hub";
 import { ALL_SUBSCRIBERS_LIST } from "@/lib/server/users";
-import { getBroadcastTemplate, getBroadcastTemplates } from "@/lib/broadcast";
+import { toBroadcastTemplates } from "@/lib/broadcast";
 import { getPreferenceConfig } from "@/lib/server/preference-config";
-import { getTemplateSampleData } from "@/lib/suprsend-mgmt";
+import { getTemplateSampleData, listTemplates } from "@/lib/suprsend-mgmt";
 
-// The form's options: which templates this workspace can broadcast, and which
-// categories are legal to send them under — the live PROMOTIONAL tree only.
+// The form's options: the workspace's LIVE templates (a template created in the
+// SuprSend dashboard is offered too), and which categories are legal to send
+// them under — the live PROMOTIONAL tree only.
 export async function GET() {
   try {
     const ws = await getActiveWorkspace();
     // The template's own sample data is applied server-side at send time, so the
     // form doesn't need it — don't fetch it per template just to render a picker.
-    const templates = getBroadcastTemplates(ws.slug);
+    const templates = toBroadcastTemplates(await listTemplates(ws.slug));
     const categories = (await getPreferenceConfig(ws.slug)).filter((c) => c.root === "promotional");
     return NextResponse.json({
       ok: true,
@@ -36,9 +37,12 @@ export async function POST(req: Request) {
     if (!template || !category) {
       return NextResponse.json({ ok: false, error: "template and category are required." }, { status: 400 });
     }
-    const known = getBroadcastTemplate(ws.slug, template);
+    // The template must exist in the workspace right now — checked against the
+    // live list, so one deleted in the dashboard fails loudly here instead of
+    // being handed to SuprSend.
+    const known = toBroadcastTemplates(await listTemplates(ws.slug)).find((t) => t.slug === template);
     if (!known) {
-      return NextResponse.json({ ok: false, error: `“${template}” isn’t a broadcast template for this workspace.` }, { status: 400 });
+      return NextResponse.json({ ok: false, error: `“${template}” isn’t a sendable template in this workspace.` }, { status: 400 });
     }
 
     // A broadcast may only run on a promotional category — on a transactional or
