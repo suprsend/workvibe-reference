@@ -11,9 +11,11 @@ import { generatedToDraft, type GeneratedTemplate } from "@/lib/templates/draft"
 
 const toDraft = generatedToDraft;
 
-// Slugs are interpolated into management API URL paths, so restrict them to the
-// shape the API itself uses — otherwise "../.." walks out of the endpoint.
-const SLUG_RE = /^[a-z0-9-]+$/;
+// Slugs are interpolated into management API URL paths, so restrict them to
+// path-safe characters — otherwise "../.." walks out of the endpoint. SuprSend
+// slugs may carry underscores and mixed case (a dashboard-created template is
+// free to), so the charset is wider than what our own seed uses.
+const SLUG_RE = /^[a-zA-Z0-9_-]+$/;
 
 export async function GET(req: Request) {
   try {
