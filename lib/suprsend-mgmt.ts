@@ -18,6 +18,10 @@ export interface MgmtResult<T = unknown> {
   body: T;
 }
 
+// Slugs come from the account (and from request params), and they land in URL
+// paths — encode each one so a slug can never rewrite the path it sits in.
+const enc = encodeURIComponent;
+
 async function call<T = unknown>(
   ws: WorkspaceSlug,
   version: "v1" | "v2",
@@ -239,7 +243,7 @@ export async function listTemplates(ws: WorkspaceSlug): Promise<TemplateSummary[
 }
 
 export function getTemplate(ws: WorkspaceSlug, slug: string) {
-  return call<TemplateSummary>(ws, "v2", `template/${slug}/`);
+  return call<TemplateSummary>(ws, "v2", `template/${enc(slug)}/`);
 }
 
 interface EmailVariantBody {
@@ -266,7 +270,7 @@ export async function getTemplateDraft(ws: WorkspaceSlug, slug: string): Promise
     description: meta.body.description ?? undefined,
   };
   if (channels.includes("email")) {
-    const v = await call<EmailVariantBody>(ws, "v2", `template/${slug}/channel/email/variant/default/`);
+    const v = await call<EmailVariantBody>(ws, "v2", `template/${enc(slug)}/channel/email/variant/default/`);
     const c = v.body.content;
     const b = c?.body;
     // Pick the source of truth by mode: raw HTML mode → raw.html; legacy visual
@@ -275,7 +279,7 @@ export async function getTemplateDraft(ws: WorkspaceSlug, slug: string): Promise
     draft.email = { subject: c?.subject ?? "", html };
   }
   if (channels.includes("inbox")) {
-    const v = await call<InboxVariantBody>(ws, "v2", `template/${slug}/channel/inbox/variant/default/`);
+    const v = await call<InboxVariantBody>(ws, "v2", `template/${enc(slug)}/channel/inbox/variant/default/`);
     const c = v.body.content;
     const btn = c?.buttons?.[0];
     draft.inbox = {
@@ -285,15 +289,15 @@ export async function getTemplateDraft(ws: WorkspaceSlug, slug: string): Promise
     };
   }
   if (channels.includes("sms")) {
-    const v = await call<{ content?: { body?: string } }>(ws, "v2", `template/${slug}/channel/sms/variant/default/`);
+    const v = await call<{ content?: { body?: string } }>(ws, "v2", `template/${enc(slug)}/channel/sms/variant/default/`);
     draft.sms = { body: v.body.content?.body ?? "" };
   }
   if (channels.includes("whatsapp")) {
-    const v = await call<{ content?: { body?: { text?: string } } }>(ws, "v2", `template/${slug}/channel/whatsapp/variant/default/`);
+    const v = await call<{ content?: { body?: { text?: string } } }>(ws, "v2", `template/${enc(slug)}/channel/whatsapp/variant/default/`);
     draft.whatsapp = { body: v.body.content?.body?.text ?? "" };
   }
   if (channels.includes("slack")) {
-    const v = await call<{ content?: { body_block?: string; body_text?: string } }>(ws, "v2", `template/${slug}/channel/slack/variant/default/`);
+    const v = await call<{ content?: { body_block?: string; body_text?: string } }>(ws, "v2", `template/${enc(slug)}/channel/slack/variant/default/`);
     const c = v.body.content;
     let blocks: SlackBlock[] = [];
     if (c?.body_block) {
@@ -315,7 +319,7 @@ export async function getTemplateDraft(ws: WorkspaceSlug, slug: string): Promise
     }
     draft.slack = { blocks };
   }
-  const mock = await call<MockDataBody>(ws, "v2", `template/${slug}/mock_data/`);
+  const mock = await call<MockDataBody>(ws, "v2", `template/${enc(slug)}/mock_data/`);
   if (mock.ok && mock.body.data?.payload && Object.keys(mock.body.data.payload).length > 0) {
     draft.sampleData = mock.body.data.payload;
   }
@@ -323,7 +327,7 @@ export async function getTemplateDraft(ws: WorkspaceSlug, slug: string): Promise
 }
 
 export function deleteTemplate(ws: WorkspaceSlug, slug: string) {
-  return call(ws, "v2", `template/${slug}/`, { method: "DELETE" });
+  return call(ws, "v2", `template/${enc(slug)}/`, { method: "DELETE" });
 }
 
 /**
@@ -339,7 +343,7 @@ export async function publishTemplate(
     return { ok: false, status: 400, body: { error: "template has no channels" } };
   }
 
-  const meta = await call(ws, "v2", `template/${draft.slug}/`, {
+  const meta = await call(ws, "v2", `template/${enc(draft.slug)}/`, {
     method: "POST",
     body: JSON.stringify({
       name: draft.name,
@@ -352,7 +356,7 @@ export async function publishTemplate(
 
   for (const ch of channels) {
     const content = CHANNEL_CONTENT[ch](draft);
-    const v = await call(ws, "v2", `template/${draft.slug}/channel/${ch}/variant/default/`, {
+    const v = await call(ws, "v2", `template/${enc(draft.slug)}/channel/${ch}/variant/default/`, {
       method: "POST",
       body: JSON.stringify({ channel: ch, id: "default", tenant_id: null, locale: "en", conditions: [], content }),
     });
@@ -363,7 +367,7 @@ export async function publishTemplate(
   // defined" errors). Non-fatal: a mock-data failure shouldn't block publish.
   await setMockData(ws, draft.slug, draft.sampleData);
 
-  const committed = await call(ws, "v2", `template/${draft.slug}/commit/?commit_message=${encodeURIComponent("Published from WorkVibe")}`, {
+  const committed = await call(ws, "v2", `template/${enc(draft.slug)}/commit/?commit_message=${encodeURIComponent("Published from WorkVibe")}`, {
     method: "PATCH",
     body: JSON.stringify({}),
   });
@@ -381,7 +385,7 @@ export async function getTemplateSampleData(
   ws: WorkspaceSlug,
   slug: string,
 ): Promise<Record<string, string>> {
-  const mock = await call<MockDataBody>(ws, "v2", `template/${slug}/mock_data/`);
+  const mock = await call<MockDataBody>(ws, "v2", `template/${enc(slug)}/mock_data/`);
   return mock.ok ? (mock.body.data?.payload ?? {}) : {};
 }
 
@@ -389,7 +393,7 @@ export async function getTemplateSampleData(
 export async function setMockData(ws: WorkspaceSlug, slug: string, sample?: Record<string, string>) {
   if (!sample || Object.keys(sample).length === 0) return;
   try {
-    await call(ws, "v2", `template/${slug}/mock_data/`, {
+    await call(ws, "v2", `template/${enc(slug)}/mock_data/`, {
       method: "PATCH",
       body: JSON.stringify({ data: { payload: sample } }),
     });
@@ -420,7 +424,7 @@ export async function listWorkflows(ws: WorkspaceSlug): Promise<WorkflowSummary[
 }
 
 export function getWorkflow(ws: WorkspaceSlug, slug: string) {
-  return call(ws, "v1", `workflow/${slug}/`);
+  return call(ws, "v1", `workflow/${enc(slug)}/`);
 }
 
 interface WorkflowTreeNode {
@@ -449,7 +453,7 @@ export async function getWorkflowTriggerData(ws: WorkspaceSlug, slug: string): P
   const slugs = collectTemplateSlugs(tree?.nodes ?? []);
   const data: Record<string, string> = {};
   for (const tslug of slugs) {
-    const mock = await call<MockDataBody>(ws, "v2", `template/${tslug}/mock_data/`);
+    const mock = await call<MockDataBody>(ws, "v2", `template/${enc(tslug)}/mock_data/`);
     const payload = mock.ok ? mock.body.data?.payload : undefined;
     if (payload) Object.assign(data, payload);
   }
@@ -457,7 +461,7 @@ export async function getWorkflowTriggerData(ws: WorkspaceSlug, slug: string): P
 }
 
 export async function publishWorkflow(ws: WorkspaceSlug, slug: string, workflow: unknown) {
-  const r = await call(ws, "v1", `workflow/${slug}/?commit=true&commit_message=${encodeURIComponent("Published from WorkVibe")}`, {
+  const r = await call(ws, "v1", `workflow/${enc(slug)}/?commit=true&commit_message=${encodeURIComponent("Published from WorkVibe")}`, {
     method: "POST",
     body: JSON.stringify(normalizeWorkflow(workflow)),
   });

@@ -25,7 +25,7 @@ function validWorkflow(w: unknown): w is GeneratedWorkflow {
   return (
     !!x &&
     typeof x.slug === "string" &&
-    /^[a-z0-9-]+$/.test(x.slug) &&
+    /^[a-zA-Z0-9_-]+$/.test(x.slug) &&
     typeof x.name === "string" &&
     !!x.tree &&
     Array.isArray(x.tree.nodes) &&
@@ -38,6 +38,9 @@ export async function GET(req: Request) {
     const ws = await getActiveWorkspace();
     const slug = new URL(req.url).searchParams.get("slug");
     if (slug) {
+      if (!/^[a-zA-Z0-9_-]+$/.test(slug)) {
+        return NextResponse.json({ ok: false, error: "Invalid workflow slug." }, { status: 400 });
+      }
       const r = await getWorkflow(ws.slug, slug);
       if (!r.ok) return NextResponse.json({ ok: false, error: "Workflow not found." }, { status: 404 });
       return NextResponse.json({ ok: true, workflow: r.body });
