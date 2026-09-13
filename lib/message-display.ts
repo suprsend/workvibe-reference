@@ -136,16 +136,6 @@ export function timeAgo(iso?: string | null): string {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
-export function timeOfDay(iso?: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 /** Full local timestamp with seconds — for the detail / timeline rows. */
 export function fmtLocal(iso?: string | null): string {
   if (!iso) return "—";
