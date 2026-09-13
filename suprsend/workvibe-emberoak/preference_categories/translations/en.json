@@ -1,0 +1,38 @@
+{
+  "sections": {
+    "feedback": {
+      "name": "Feedback",
+      "description": ""
+    },
+    "your-account": {
+      "name": "Your account",
+      "description": ""
+    },
+    "your-orders": {
+      "name": "Your orders",
+      "description": ""
+    }
+  },
+  "categories": {
+    "account-security": {
+      "name": "Account security",
+      "description": "Sign-ins and password changes. Always on."
+    },
+    "feedback": {
+      "name": "Feedback",
+      "description": "A quick how-was-it, the day after an order."
+    },
+    "getting-started": {
+      "name": "Getting started",
+      "description": "Welcome and account setup for new diners."
+    },
+    "order-updates": {
+      "name": "Order updates",
+      "description": "Order confirmed, order ready, and status along the way."
+    },
+    "receipts": {
+      "name": "Receipts",
+      "description": "Your receipt after each paid order."
+    }
+  }
+}

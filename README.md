@@ -35,7 +35,8 @@ components/        Client components (one *-client.tsx per surface) + shared UI
 lib/
   server/         Server-only SuprSend access (node SDK + management API)
   wf/             Workflow canvas derivation
-scripts/          Provisioning (provision.mjs)
+scripts/          Seeding (provision.mjs) + asset push (push-assets.mjs)
+suprsend/         The reference assets — CLI-native files, one folder per workspace
 public/wf-engine.js   Canvas rendering engine
 ```
 
@@ -104,13 +105,22 @@ https://app.suprsend.com/en/<workspace-slug>/developers/api-keys
 
 The `<workspace-slug>` in that URL can differ per account — copy it from your browser's address bar when viewing the workspace.
 
-**7. Seed the content.** WorkVibe ships with a working set of branding, preference categories, templates, workflows and demo subscribers for each demo workspace. Both demo customers are restaurant chains, so both get the same five default workflows — welcome, order confirmed, order ready, receipt, and sign-in alert — and each adds its own: a day-after feedback ask for Ember & Oak (casual dining, Austin); a delivery-arriving nudge and a broadcastable weekend deal for Nolan's Pizza (delivery-first, Denver). That standard-set-plus-additions shape is the point: real customers of one platform run mostly the same notifications and differ in small ways. This publishes all of it into your freshly-created workspaces, in the required order:
+**7. Push the reference assets.** WorkVibe ships a starter kit of preference categories, templates and workflows for each demo workspace, as CLI-native files under `suprsend/<workspace>/`. Both demo customers are restaurant chains, so both get the same five default workflows — welcome, order confirmed, order ready, receipt, and sign-in alert — and each adds its own: a day-after feedback ask for Ember & Oak (casual dining, Austin); a delivery-arriving nudge and a broadcastable weekend deal for Nolan's Pizza (delivery-first, Denver). That standard-set-plus-additions shape is the point: real customers of one platform run mostly the same notifications and differ in small ways. This publishes the kit with the official `suprsend` CLI, per workspace, in dependency order (categories → templates → workflows):
 
 ```bash
-node --env-file=.env.local scripts/provision.mjs all
+npm run push:assets
 ```
 
-**8. Run the dev server.**
+Your account is the source of truth from here on: the app renders whatever the workspaces hold, so you can edit or add assets in the SuprSend dashboard freely — and `npx suprsend template pull -w <workspace> -d suprsend/<workspace>/templates` (same for `workflow` / `category`) brings dashboard edits back into these files if you want them versioned.
+
+**8. Seed the demo data.** Branding (the tenant each template's `{{$brand.*}}` resolves through) and the demo subscribers — the data-plane pieces the CLI has no commands for:
+
+```bash
+node --env-file=.env.local scripts/provision.mjs brand
+node --env-file=.env.local scripts/provision.mjs users
+```
+
+**9. Run the dev server.**
 
 ```bash
 npm run dev
@@ -173,12 +183,10 @@ Workspaces are declared in `lib/workspaces.ts`. Add an entry there, re-run the p
 | `npm run typecheck` | Type-check with `tsc --noEmit` |
 | `npm test` | Run the unit tests (Vitest) |
 | `node --env-file=.env.local scripts/provision.mjs workspaces` | Create/reuse workspaces and scaffold their env lines |
-| `node --env-file=.env.local scripts/provision.mjs brand` | Set each workspace's tenant brand (`scripts/seed-data/brands.json`) — run before `templates`, which render `{{$brand.*}}` |
-| `node --env-file=.env.local scripts/provision.mjs categories` | Publish the seed preference categories (`scripts/seed-data/categories.json`) — must run before `workflows` |
-| `node --env-file=.env.local scripts/provision.mjs templates` | Publish the seed templates (`scripts/seed-data/templates.json`) |
-| `node --env-file=.env.local scripts/provision.mjs workflows` | Publish the seed workflows (`scripts/seed-data/workflows.json`) |
+| `npm run push:assets` | Publish the reference assets (`suprsend/<workspace>/`) with the SuprSend CLI — categories → templates → workflows, committed live. Add `-- --dry-run` to preview |
+| `node --env-file=.env.local scripts/provision.mjs brand` | Set each workspace's tenant brand (`scripts/seed-data/brands.json`) — templates render `{{$brand.*}}` through it |
 | `node --env-file=.env.local scripts/provision.mjs users` | Seed the demo subscribers (`scripts/seed-data/users.json`) and fire onboarding for each newly created one |
-| `node --env-file=.env.local scripts/provision.mjs all` | Run every stage above, in order |
+| `npm run seed` | provision.mjs workspaces + brand + users, in order |
 
 ---
 

@@ -1,0 +1,12 @@
+{
+  "enabled_channels": [
+    "email"
+  ],
+  "name": "Order Feedback",
+  "slug": "order-feedback",
+  "variant_order": {
+    "email": [
+      "default"
+    ]
+  }
+}

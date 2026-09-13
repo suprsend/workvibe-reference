@@ -2,7 +2,7 @@
   "name": "workvibe",
   "version": "0.1.0",
   "private": true,
-  "description": "Multi-tenant customer-notification platform built on SuprSend — AI-authored templates and workflows, list broadcasts, email/inbox/Slack delivery, per-subscriber preferences, executions and analytics.",
+  "description": "Multi-tenant customer-notification platform built on SuprSend \u2014 AI-authored templates and workflows, list broadcasts, email/inbox/Slack delivery, per-subscriber preferences, executions and analytics.",
   "license": "MIT",
   "keywords": [
     "suprsend",
@@ -18,7 +18,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "push:assets": "node --env-file=.env.local scripts/push-assets.mjs",
+    "seed": "node --env-file=.env.local scripts/provision.mjs all"
   },
   "dependencies": {
     "@suprsend/node-sdk": "^1.15.1",

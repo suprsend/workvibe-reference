@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.suprsend.com/template/v2/variant_schema.json",
+  "action": "added",
+  "approval_at": "2026-09-13T21:02:36.867883Z",
+  "approval_status": "auto_approved",
+  "channel": "inbox",
+  "conditions": [],
+  "content": {
+    "$schema": "https://schema.suprsend.com/template/v2/channel/inbox_schema.json",
+    "action_url": "",
+    "avatar": null,
+    "body": "@body.md",
+    "buttons": [
+      {
+        "open_in_new_tab": true,
+        "text": "Review activity",
+        "url": "{{security_url}}"
+      }
+    ],
+    "expiry": null,
+    "extra_data": "",
+    "header": "New sign-in detected",
+    "image_url": "",
+    "importance": "default",
+    "is_expiry_enabled": false,
+    "is_pinned": false,
+    "open_in_new_tab": false,
+    "schema_version": "1.0",
+    "subtext": null,
+    "tags": [],
+    "templating_language": "handlebars"
+  },
+  "created_at": "2026-09-13T21:02:37.532520Z",
+  "discard_comment": null,
+  "errors": {},
+  "has_error": false,
+  "hash": "bcca0475dee83825f4f7d6803e92a89f607bc2803c65d5edb85c0c2fd3e693b8",
+  "id": "default",
+  "locale": "en",
+  "needs_vendor_approval": false,
+  "seq_no": 1,
+  "sysgen_template_name": null,
+  "tenant_id": null,
+  "vendor_approvals": []
+}

@@ -1,0 +1,17 @@
+{
+  "actor_distinct_id": null,
+  "actor_object": null,
+  "actor_sub_type": "user",
+  "batch_count": 1,
+  "is_batch": false,
+  "payload": {
+    "driver_name": "Marcus",
+    "minutes_away": "5",
+    "order_number": "8821",
+    "track_url": "https://example.com/track/8821"
+  },
+  "recipient_distinct_id": "u_60119",
+  "recipient_object": null,
+  "recipient_sub_type": "user",
+  "tenant_id": "default"
+}

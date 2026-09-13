@@ -1,0 +1,16 @@
+{
+  "enabled_channels": [
+    "email",
+    "inbox"
+  ],
+  "name": "Weekend Deal",
+  "slug": "weekend-deal",
+  "variant_order": {
+    "email": [
+      "default"
+    ],
+    "inbox": [
+      "default"
+    ]
+  }
+}

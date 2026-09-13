@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.suprsend.com/template/v2/variant_schema.json",
+  "action": "added",
+  "approval_at": "2026-09-13T21:02:32.976846Z",
+  "approval_status": "auto_approved",
+  "channel": "inbox",
+  "conditions": [],
+  "content": {
+    "$schema": "https://schema.suprsend.com/template/v2/channel/inbox_schema.json",
+    "action_url": "",
+    "avatar": null,
+    "body": "@body.md",
+    "buttons": [
+      {
+        "open_in_new_tab": true,
+        "text": "Browse the menu",
+        "url": "https://example.com/menu"
+      }
+    ],
+    "expiry": null,
+    "extra_data": "",
+    "header": "Welcome to {{$brand.brand_name}}",
+    "image_url": "",
+    "importance": "default",
+    "is_expiry_enabled": false,
+    "is_pinned": false,
+    "open_in_new_tab": false,
+    "schema_version": "1.0",
+    "subtext": null,
+    "tags": [],
+    "templating_language": "handlebars"
+  },
+  "created_at": "2026-09-13T21:02:33.767814Z",
+  "discard_comment": null,
+  "errors": {},
+  "has_error": false,
+  "hash": "2bcc649ad031f73d352c16668ea65bcff288b784459509e93d30b05577f74a4b",
+  "id": "default",
+  "locale": "en",
+  "needs_vendor_approval": false,
+  "seq_no": 1,
+  "sysgen_template_name": null,
+  "tenant_id": null,
+  "vendor_approvals": []
+}

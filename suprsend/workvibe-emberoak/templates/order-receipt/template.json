@@ -1,0 +1,12 @@
+{
+  "enabled_channels": [
+    "email"
+  ],
+  "name": "Order Receipt",
+  "slug": "order-receipt",
+  "variant_order": {
+    "email": [
+      "default"
+    ]
+  }
+}

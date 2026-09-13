@@ -3,8 +3,10 @@
 //   node --env-file=.env.local scripts/fire-test.mjs <workspace> <workflow-slug> [distinct_id]
 //
 // Event-triggered workflows are fired by emitting their event; API-triggered ones
-// by naming the workflow directly. This picks the right path from workflows.json,
-// and sends the template's own sample data so nothing renders blank.
+// by naming the workflow directly. This picks the right path from the workflow's
+// CLI-native file (suprsend/<ws>/workflows/<slug>/workflow.json), and sends the
+// template's own sample data (each template's mock_data.json) so nothing renders
+// blank.
 
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
@@ -20,14 +22,27 @@ if (!ws || !slug) die("usage: fire-test.mjs <workspace> <workflow-slug> [distinc
 const who = whoArg || (JSON.parse(readFileSync(resolve(HERE, "seed-data/users.json"), "utf8"))[ws] || [])[0]?.distinct_id;
 if (!who) die(`no subscriber to send to — pass a distinct_id, or seed users for ${ws}`);
 
-const wfs = JSON.parse(readFileSync(resolve(HERE, "seed-data/workflows.json"), "utf8"))[ws] || [];
-const tpls = JSON.parse(readFileSync(resolve(HERE, "seed-data/templates.json"), "utf8"))[ws] || [];
-const wf = wfs.find((w) => w.slug === slug);
-if (!wf) die(`no workflow "${slug}" in ${ws}. Available: ${wfs.map((w) => w.slug).join(", ")}`);
+const wfPath = resolve(HERE, `../suprsend/${ws}/workflows/${slug}/workflow.json`);
+let wf;
+try {
+  wf = JSON.parse(readFileSync(wfPath, "utf8"));
+} catch {
+  die(`no workflow file at ${wfPath} — is the slug right, and pulled for this workspace?`);
+}
 
-// Merge the sample data of every template this workflow sends.
+// Merge the sample data of every template this workflow sends (each template's
+// mock_data.json `payload`, as pulled by the CLI).
 const slugs = (wf.tree?.nodes ?? []).map((n) => n.properties?.template).filter(Boolean);
-const data = Object.assign({}, ...slugs.map((s) => tpls.find((t) => t.slug === s)?.sampleData ?? {}));
+const data = Object.assign(
+  {},
+  ...slugs.map((s) => {
+    try {
+      return JSON.parse(readFileSync(resolve(HERE, `../suprsend/${ws}/templates/${s}/mock_data.json`), "utf8")).payload ?? {};
+    } catch {
+      return {};
+    }
+  }),
+);
 
 const p = `SUPRSEND_${ws.replace(/-/g, "_").toUpperCase()}`;
 const key = process.env[`${p}_WORKSPACE_KEY`], secret = process.env[`${p}_WORKSPACE_SECRET`];

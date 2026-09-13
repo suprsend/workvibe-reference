@@ -1,0 +1,18 @@
+{
+  "actor_distinct_id": null,
+  "actor_object": null,
+  "actor_sub_type": "user",
+  "batch_count": 1,
+  "is_batch": false,
+  "payload": {
+    "order_date": "September 1",
+    "order_number": "4712",
+    "order_total": "$32.40",
+    "payment_method": "Visa ••4471",
+    "receipt_url": "https://example.com/receipt/4712"
+  },
+  "recipient_distinct_id": "u_60119",
+  "recipient_object": null,
+  "recipient_sub_type": "user",
+  "tenant_id": "default"
+}

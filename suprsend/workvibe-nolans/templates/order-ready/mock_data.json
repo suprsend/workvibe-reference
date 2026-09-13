@@ -1,0 +1,16 @@
+{
+  "actor_distinct_id": null,
+  "actor_object": null,
+  "actor_sub_type": "user",
+  "batch_count": 1,
+  "is_batch": false,
+  "payload": {
+    "handoff_note": "Show this at the counter to collect it.",
+    "order_number": "4712",
+    "order_url": "https://example.com/order/4712"
+  },
+  "recipient_distinct_id": "u_60119",
+  "recipient_object": null,
+  "recipient_sub_type": "user",
+  "tenant_id": "default"
+}

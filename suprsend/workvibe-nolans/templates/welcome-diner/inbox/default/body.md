@@ -1,0 +1,1 @@
+Your account is ready — place your first order.

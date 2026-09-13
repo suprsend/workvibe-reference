@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.suprsend.com/workflow/v1/schema.json",
+  "active_at": "2026-09-13T21:02:57.663574Z",
+  "category": "order-updates",
+  "commit_message": "Seeded by provision.mjs",
+  "conditions": [],
+  "created_at": "2026-09-13T21:02:57.447989Z",
+  "description": "Nolan's addition: the order is minutes from the door. The one place delivery language belongs — the default set stays neutral across dine-in, pickup and delivery.",
+  "hash": "c310051525ceaa604dc127cb9695567897a67455874b51d6da6159ad65511a86",
+  "is_enabled": true,
+  "last_executed_at": null,
+  "name": "Arriving Soon",
+  "override_actor_user_expr": null,
+  "override_recipients_single_object_fields_expr": null,
+  "override_recipients_type": null,
+  "override_recipients_user_expr": null,
+  "override_tenant_expr": null,
+  "payload_schema": null,
+  "ratelimit": null,
+  "slug": "arriving-soon",
+  "status": "active",
+  "tags": [],
+  "tree": {
+    "nodes": [
+      {
+        "description": null,
+        "name": "Multi-Channel",
+        "node_type": "send_multi_channel",
+        "properties": {
+          "channels_expr": null,
+          "success": "seen",
+          "success_is_event": false,
+          "template": "arriving-soon"
+        },
+        "ref": "n_1",
+        "schema_version": "1"
+      }
+    ]
+  },
+  "trigger_events": [
+    "ORDER_ARRIVING"
+  ],
+  "trigger_type": "event",
+  "updated_at": "2026-09-13T21:02:57.663720Z",
+  "updated_by": {
+    "email": "org_01M0C93BHQ9XQYBC0287TWNBRQ@systemuser.suprsend.com",
+    "name": "System User"
+  },
+  "validation_result": {
+    "is_valid": true
+  }
+}

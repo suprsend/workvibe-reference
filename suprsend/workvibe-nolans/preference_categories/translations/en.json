@@ -1,0 +1,38 @@
+{
+  "sections": {
+    "offers": {
+      "name": "Offers",
+      "description": ""
+    },
+    "your-account": {
+      "name": "Your account",
+      "description": ""
+    },
+    "your-orders": {
+      "name": "Your orders",
+      "description": ""
+    }
+  },
+  "categories": {
+    "account-security": {
+      "name": "Account security",
+      "description": "Sign-ins and password changes. Always on."
+    },
+    "getting-started": {
+      "name": "Getting started",
+      "description": "Welcome and account setup for new diners."
+    },
+    "offers": {
+      "name": "Offers",
+      "description": "Deals and promo codes from Nolan's Pizza."
+    },
+    "order-updates": {
+      "name": "Order updates",
+      "description": "Order confirmed, order ready, and status along the way."
+    },
+    "receipts": {
+      "name": "Receipts",
+      "description": "Your receipt after each paid order."
+    }
+  }
+}

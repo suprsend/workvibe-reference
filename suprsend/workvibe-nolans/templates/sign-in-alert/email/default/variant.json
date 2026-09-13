@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.suprsend.com/template/v2/variant_schema.json",
+  "action": "added",
+  "approval_at": "2026-09-13T21:02:41.963545Z",
+  "approval_status": "auto_approved",
+  "channel": "email",
+  "conditions": [],
+  "content": {
+    "$schema": "https://schema.suprsend.com/template/v2/channel/email_schema.json",
+    "bcc": "",
+    "body": {
+      "designer": {
+        "design_json": "@body.designer.json",
+        "display_conditions": [],
+        "html": "@body.designer.html",
+        "merge_tags": [],
+        "text": ""
+      },
+      "email_markup": "",
+      "plain_text": null,
+      "preheader": "",
+      "raw": null,
+      "type": "designer"
+    },
+    "cc": "",
+    "extra_to": "",
+    "from_address": "",
+    "from_name": "",
+    "reply_to": "",
+    "subject": "New sign-in to your {{{$brand.brand_name}}} account",
+    "templating_language": "handlebars"
+  },
+  "created_at": "2026-09-13T21:02:42.640583Z",
+  "discard_comment": null,
+  "errors": {},
+  "has_error": false,
+  "hash": "de1503298737eb47edcefc2fca85d2b955aa14e5c0714a1d8232ca7642661d18",
+  "id": "default",
+  "locale": "en",
+  "needs_vendor_approval": false,
+  "seq_no": 1,
+  "sysgen_template_name": null,
+  "tenant_id": null,
+  "vendor_approvals": []
+}

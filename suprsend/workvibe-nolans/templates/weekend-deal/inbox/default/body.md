@@ -1,0 +1,1 @@
+Code {{promo_code}} — valid through {{expires_on}}.

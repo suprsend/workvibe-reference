@@ -1,0 +1,18 @@
+{
+  "actor_distinct_id": null,
+  "actor_object": null,
+  "actor_sub_type": "user",
+  "batch_count": 1,
+  "is_batch": false,
+  "payload": {
+    "cta_url": "https://example.com/order",
+    "deal_details": "Any two large pizzas for $22, Friday through Sunday, at every Denver location.",
+    "deal_headline": "two large pizzas for $22 this weekend",
+    "expires_on": "September 7",
+    "promo_code": "WEEKEND22"
+  },
+  "recipient_distinct_id": "u_60119",
+  "recipient_object": null,
+  "recipient_sub_type": "user",
+  "tenant_id": "default"
+}
