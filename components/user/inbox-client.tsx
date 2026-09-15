@@ -6,6 +6,7 @@ import { AlertCircle } from "lucide-react";
 import { useWorkspace } from "@/components/providers";
 import { PageHeader } from "@/components/shared/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SubscriberRequired } from "@/components/user/subscriber-required";
 
 const InboxMount = dynamic(() => import("@/components/user/inbox-mount"), {
   ssr: false,
@@ -14,8 +15,12 @@ const InboxMount = dynamic(() => import("@/components/user/inbox-mount"), {
 
 export function InboxClient() {
   const { workspace, actorId } = useWorkspace();
-  // Remount per workspace + impersonated user so the SDK re-auths cleanly.
-  return <InboxBody key={`${workspace}:${actorId}`} actorId={actorId} />;
+  return (
+    <SubscriberRequired>
+      {/* Remount per workspace + impersonated user so the SDK re-auths cleanly. */}
+      <InboxBody key={`${workspace}:${actorId}`} actorId={actorId} />
+    </SubscriberRequired>
+  );
 }
 
 function InboxBody({ actorId }: { actorId: string }) {
