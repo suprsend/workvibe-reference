@@ -10,7 +10,7 @@
     "order_number": "8821",
     "track_url": "https://example.com/track/8821"
   },
-  "recipient_distinct_id": "u_60119",
+  "recipient_distinct_id": null,
   "recipient_object": null,
   "recipient_sub_type": "user",
   "tenant_id": "default"

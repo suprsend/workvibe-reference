@@ -34,6 +34,8 @@ function Body() {
   const [error, setError] = React.useState<string | null>(null);
   const [selected, setSelected] = React.useState<string | null>(null);
   const [adding, setAdding] = React.useState(false);
+  // Whether all-subscribers tracks user entry. Off means new subscribers get no welcome.
+  const [welcomeTracking, setWelcomeTracking] = React.useState(true);
 
   const load = React.useCallback(async (keep?: string) => {
     try {
@@ -45,6 +47,7 @@ function Body() {
       } else {
         setError(null);
         setUsers(data.users);
+        setWelcomeTracking(data.welcomeTracking !== false);
         setSelected((s) => keep ?? s ?? data.users[0]?.distinctId ?? null);
       }
     } catch {
@@ -65,6 +68,7 @@ function Body() {
           setUsers([]);
         } else {
           setUsers(data.users);
+          setWelcomeTracking(data.welcomeTracking !== false);
           setSelected(data.users[0]?.distinctId ?? null);
         }
       } catch {
@@ -108,7 +112,7 @@ function Body() {
       <div className="flex items-start justify-between gap-4">
         <PageHeader
           title="Users"
-          description="Everyone subscribed in this workspace — their contact, notification preferences, and what they’ve been sent. Real subscribers sign up in the customer’s own product; Add subscriber is here so you can exercise onboarding and list entry without a provisioning run."
+          description="Everyone subscribed in this workspace — their contact, notification preferences, and what they’ve been sent. Real subscribers sign up in the customer’s own product; Add subscriber stands in for that signup."
         />
         <Button variant="outline" size="sm" className="mt-1 shrink-0 gap-1.5" onClick={() => setAdding(true)}>
           <UserPlus className="size-4" /> Add subscriber
@@ -121,6 +125,14 @@ function Body() {
         <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>
       )}
 
+      {!error && !welcomeTracking && (
+        <div className="rounded-md border border-border bg-muted/40 p-3 text-sm">
+          <span className="font-medium">The welcome is off.</span> In the SuprSend dashboard, open the{" "}
+          <span className="font-mono text-xs">all-subscribers</span> list and turn on Track user entry before adding
+          anyone. People added while it’s off are never welcomed.
+        </div>
+      )}
+
       {users === null ? (
         <div className="grid gap-4 md:grid-cols-[260px_1fr]">
           <Skeleton className="h-64 rounded-lg" />
@@ -130,7 +142,7 @@ function Body() {
         <EmptyState
           icon={Users}
           title="No subscribers yet"
-          description="Run the provisioning users stage to seed this workspace’s demo subscribers. Real subscribers arrive when they sign up in the customer’s product."
+          description="Use Add subscriber to add the first person. Real subscribers arrive when they sign up in the customer’s product."
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-[260px_1fr]">

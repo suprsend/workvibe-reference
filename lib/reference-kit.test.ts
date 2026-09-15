@@ -14,7 +14,10 @@ import { describe, it, expect } from "vitest";
 // legitimately differ per workspace — those are stripped before comparing.
 
 const ROOT = resolve(__dirname, "..");
-const WORKSPACES = ["workvibe-emberoak", "workvibe-nolans"] as const;
+// Every workspace folder in the kit — the same folders `push:assets` publishes.
+const WORKSPACES = readdirSync(resolve(ROOT, "suprsend"), { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => d.name);
 const DEFAULT_WORKFLOWS = ["welcome-diner", "order-confirmed", "order-ready", "order-receipt", "sign-in-alert"];
 const DEFAULT_CATEGORIES = ["getting-started", "order-updates", "receipts", "account-security"];
 
@@ -62,24 +65,39 @@ function categoryBySlug(ws: string, slug: string): Json | undefined {
   return undefined;
 }
 
+function expectSameEverywhere(docs: (Json | undefined)[]) {
+  const [first, ...rest] = docs;
+  expect(first).toBeDefined();
+  for (const doc of rest) expect(doc).toStrictEqual(first);
+}
+
 describe("the default set is identical in every workspace", () => {
+  it("the kit has more than one workspace to compare", () => {
+    expect(WORKSPACES.length).toBeGreaterThan(1);
+  });
+
   it.each(DEFAULT_WORKFLOWS)("workflow %s", (slug) => {
-    const [a, b] = WORKSPACES.map((ws) => workflow(ws, slug));
-    expect(a).toBeDefined();
-    expect(b).toStrictEqual(a);
+    expectSameEverywhere(WORKSPACES.map((ws) => workflow(ws, slug)));
   });
 
   it.each(DEFAULT_WORKFLOWS)("template metadata for %s", (slug) => {
     // The standard workflows send a template of the same slug.
-    const [a, b] = WORKSPACES.map((ws) => readJson(`suprsend/${ws}/templates/${slug}/template.json`));
-    expect(a).toBeDefined();
-    expect(b).toStrictEqual(a);
+    expectSameEverywhere(WORKSPACES.map((ws) => readJson(`suprsend/${ws}/templates/${slug}/template.json`)));
   });
 
   it.each(DEFAULT_CATEGORIES)("category %s", (slug) => {
-    const [a, b] = WORKSPACES.map((ws) => categoryBySlug(ws, slug));
-    expect(a).toBeDefined();
-    expect(b).toStrictEqual(a);
+    expectSameEverywhere(WORKSPACES.map((ws) => categoryBySlug(ws, slug)));
+  });
+});
+
+// The kit ships no users, so a preview can't point at one — a pushed id would name
+// someone who doesn't exist in a fresh workspace. The app's editor picks a live user.
+describe("template previews name no recipient", () => {
+  it.each(WORKSPACES)("%s", (ws) => {
+    for (const slug of readdirSync(resolve(ROOT, `suprsend/${ws}/templates`))) {
+      const mock = readJson(`suprsend/${ws}/templates/${slug}/mock_data.json`);
+      if (mock) expect(mock.recipient_distinct_id, `${ws}/${slug}`).toBeNull();
+    }
   });
 });
 

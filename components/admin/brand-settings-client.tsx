@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 import type { Brand } from "@/lib/server/brand";
 import { useWorkspace } from "@/components/providers";
@@ -61,6 +62,7 @@ function ColorField({
 }
 
 function Body() {
+  const router = useRouter();
   const [brand, setBrand] = React.useState<Brand | null>(null);
   // Custom properties edited as an ordered key/value list (Records lose order and
   // make key-renaming awkward). Folded back into the brand on save.
@@ -117,7 +119,10 @@ function Body() {
         body: snapshot,
       });
       const data = await res.json();
-      if (data.ok) lastSaved.current = snapshot;
+      if (data.ok) {
+        lastSaved.current = snapshot;
+        router.refresh(); // the workspace switcher shows the brand name and colour
+      }
       else toast.error("Couldn’t save", { description: data.error });
     } catch {
       toast.error("Couldn’t reach SuprSend.");

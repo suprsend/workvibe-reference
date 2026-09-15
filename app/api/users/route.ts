@@ -1,21 +1,23 @@
 import { NextResponse } from "next/server";
 import { errMsg } from "@/lib/server/http";
 import { getActiveWorkspace } from "@/lib/server/workspace";
-import { listUsers, removeUser, createUser } from "@/lib/server/users";
+import { listUsers, removeUser, createUser, ensureSubscribersList } from "@/lib/server/users";
 
 export async function GET() {
   try {
     const ws = await getActiveWorkspace();
-    const users = await listUsers(ws);
-    return NextResponse.json({ ok: true, users });
+    // The list is created here, before anyone is added, so its entry tracking can be
+    // switched on in the dashboard first — see ensureSubscribersList.
+    const [users, list] = await Promise.all([listUsers(ws), ensureSubscribersList(ws).catch(() => null)]);
+    return NextResponse.json({ ok: true, users, welcomeTracking: list?.trackUserEntry ?? null });
   } catch (e) {
     return NextResponse.json({ ok: false, error: errMsg(e) }, { status: 500 });
   }
 }
 
 // Add a subscriber. Not how consumers really arrive — they sign up in the
-// customer's own product — but the app needs a way to exercise the signup path
-// without a provisioning run. Joining the list is what welcomes them.
+// customer's own product — but it's how people are added in this app. Joining the
+// list is what welcomes them.
 export async function POST(req: Request) {
   try {
     const ws = await getActiveWorkspace();

@@ -23,7 +23,7 @@
 // subscriber — silently — even for categories that default to inbox. The flag
 // is set right after each category push.
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -40,9 +40,11 @@ function die(msg) {
   process.exit(1);
 }
 
+// One folder per workspace under suprsend/, named by its slug.
 function readWorkspaceSlugs() {
-  const src = readFileSync(resolve(ROOT, "lib/workspaces.ts"), "utf8");
-  return [...src.matchAll(/slug:\s*"([^"]+)"/g)].map((m) => m[1]);
+  return readdirSync(resolve(ROOT, "suprsend"), { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
 }
 
 function run(cliArgs) {
@@ -67,7 +69,7 @@ async function main() {
   if (!TOKEN) die("SUPRSEND_SERVICE_TOKEN is not set (run with --env-file=.env.local).");
 
   const slugs = readWorkspaceSlugs().filter((s) => !only || s === only);
-  if (slugs.length === 0) die(only ? `"${only}" is not a workspace in lib/workspaces.ts` : "no workspaces found");
+  if (slugs.length === 0) die(only ? `no assets folder for "${only}" under suprsend/` : "no workspace folders under suprsend/");
 
   for (const ws of slugs) {
     console.log(`\n════ ${ws} ════`);

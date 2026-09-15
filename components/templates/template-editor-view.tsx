@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { ChevronLeft, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/components/providers";
-import { getWorkspace } from "@/lib/workspaces";
+import { useWorkspaces } from "@/components/app-shell/workspace-shell";
 
 // Browser-only SDK → load client-side only.
 const EditorMount = dynamic(() => import("@/components/templates/editor-mount"), {
@@ -24,7 +24,8 @@ export function TemplateEditorView({
   name: string;
 }) {
   const { workspace, users, usersLoading } = useWorkspace();
-  const accent = getWorkspace(workspace).accent;
+  // The active brand colour; the editor keeps its own theme when the brand sets none.
+  const accent = useWorkspaces().active?.accent ?? undefined;
   // Who the preview renders as. The editor resolves {{$recipient.*}} against a real
   // subscriber, so this is the live roster, not a fixed demo id. Admin screens have
   // no "Viewing as" — that's a User-view control — so the choice belongs here.

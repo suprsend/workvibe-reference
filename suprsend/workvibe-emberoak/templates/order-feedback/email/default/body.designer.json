@@ -194,7 +194,7 @@
                     },
                     "name": "web",
                     "values": {
-                      "href": "https://example.com/feedback",
+                      "href": "{{feedback_url}}",
                       "target": "_blank"
                     }
                   },
