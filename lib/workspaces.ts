@@ -27,7 +27,7 @@ export interface AccountWorkspace {
 }
 
 export const NO_WORKSPACE_MESSAGE =
-  "No workspace is connected. Run `npm run create:workspaces`, paste the keys into .env.local, then restart the dev server.";
+  "No workspace is connected. Run npm run create:workspaces, paste the keys into .env.local, then restart the dev server.";
 
 /** Env-var prefix for a workspace's credentials. "workvibe-emberoak" → "SUPRSEND_WORKVIBE_EMBEROAK". */
 export function envPrefix(slug: WorkspaceSlug): string {
