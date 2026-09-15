@@ -194,7 +194,7 @@
                     },
                     "name": "web",
                     "values": {
-                      "href": "https://example.com/menu",
+                      "href": "{{$brand.social_links.website}}",
                       "target": "_blank"
                     }
                   },

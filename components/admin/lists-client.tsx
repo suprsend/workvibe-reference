@@ -64,7 +64,7 @@ function Body() {
         <EmptyState
           icon={ListIcon}
           title="No lists yet"
-          description="Run the provisioning users stage to create the all-subscribers list, or create a list in SuprSend and it’ll appear here."
+          description="Open Users to create the all-subscribers list, or create a list in SuprSend and it’ll appear here."
         />
       ) : (
         <div className="max-w-3xl space-y-8">

@@ -16,7 +16,7 @@ export default function EditorMount({
   channels: string[];
   accessToken: string;
   recipient: string;
-  primary: string;
+  primary?: string;
 }) {
   return (
     <SuprSendTemplateProvider
@@ -29,7 +29,7 @@ export default function EditorMount({
       conditions={[]}
       accessToken={accessToken}
       recipientDistinctId={recipient}
-      themeOverrides={{ primary }}
+      themeOverrides={primary ? { primary } : undefined}
     >
       <TemplateEditor />
     </SuprSendTemplateProvider>

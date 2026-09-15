@@ -14,7 +14,7 @@
       {
         "open_in_new_tab": true,
         "text": "Browse the menu",
-        "url": "https://example.com/menu"
+        "url": "{{$brand.social_links.website}}"
       }
     ],
     "expiry": null,

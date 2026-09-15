@@ -10,7 +10,7 @@
     "order_url": "https://example.com/order/4712",
     "ready_time": "7:05 PM"
   },
-  "recipient_distinct_id": "u_60119",
+  "recipient_distinct_id": null,
   "recipient_object": null,
   "recipient_sub_type": "user",
   "tenant_id": "default"

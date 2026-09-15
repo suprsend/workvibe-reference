@@ -1,6 +1,8 @@
-// Fire a seeded workflow against a real subscriber, to test end to end.
+// Fire a workflow against a real subscriber, to test end to end.
 //
-//   node --env-file=.env.local scripts/fire-test.mjs <workspace> <workflow-slug> [distinct_id]
+//   node --env-file=.env.local scripts/fire-test.mjs <workspace> <workflow-slug> <distinct_id>
+//
+// Copy the distinct_id from the app's Users tab.
 //
 // Event-triggered workflows are fired by emitting their event; API-triggered ones
 // by naming the workflow directly. This picks the right path from the workflow's
@@ -14,13 +16,8 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const die = (m) => { console.error(`✗ ${m}`); process.exit(1); };
 
-const [ws, slug, whoArg] = process.argv.slice(2);
-if (!ws || !slug) die("usage: fire-test.mjs <workspace> <workflow-slug> [distinct_id]");
-
-// Default to the workspace's first seeded subscriber rather than a fixed id, so
-// this keeps working when the roster changes.
-const who = whoArg || (JSON.parse(readFileSync(resolve(HERE, "seed-data/users.json"), "utf8"))[ws] || [])[0]?.distinct_id;
-if (!who) die(`no subscriber to send to — pass a distinct_id, or seed users for ${ws}`);
+const [ws, slug, who] = process.argv.slice(2);
+if (!ws || !slug || !who) die("usage: fire-test.mjs <workspace> <workflow-slug> <distinct_id>");
 
 const wfPath = resolve(HERE, `../suprsend/${ws}/workflows/${slug}/workflow.json`);
 let wf;

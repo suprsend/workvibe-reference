@@ -3,12 +3,12 @@
 import * as React from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
-import { getWorkspace, type WorkspaceSlug } from "@/lib/workspaces";
 import type { WorkUser } from "@/lib/server/users";
 
 interface WorkspaceState {
-  workspace: WorkspaceSlug;
-  setWorkspace: (slug: WorkspaceSlug) => void;
+  /** Slug picked in the switcher (from the cookie). The layouts resolve it against the live list. */
+  workspace: string;
+  setWorkspace: (slug: string) => void;
   /** The user currently being impersonated in the User view. */
   actorId: string;
   setActorId: (id: string) => void;
@@ -29,7 +29,7 @@ export function useWorkspace(): WorkspaceState {
 
 const YEAR = 60 * 60 * 24 * 365;
 function writeCookie(key: string, value: string) {
-  document.cookie = `${key}=${value}; path=/; max-age=${YEAR}; samesite=lax`;
+  document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=${YEAR}; samesite=lax`;
 }
 
 export function AppProviders({
@@ -38,10 +38,10 @@ export function AppProviders({
   initialActor,
 }: {
   children: React.ReactNode;
-  initialWorkspace: WorkspaceSlug;
+  initialWorkspace: string;
   initialActor: string;
 }) {
-  const [workspace, setWs] = React.useState<WorkspaceSlug>(initialWorkspace);
+  const [workspace, setWs] = React.useState<string>(initialWorkspace);
   const [actorId, setAct] = React.useState<string>(initialActor);
   const [users, setUsers] = React.useState<WorkUser[]>([]);
   const [usersLoading, setUsersLoading] = React.useState(true);
@@ -80,7 +80,7 @@ export function AppProviders({
     })();
   }, [workspace, refreshUsers]);
 
-  const setWorkspace = React.useCallback((slug: WorkspaceSlug) => {
+  const setWorkspace = React.useCallback((slug: string) => {
     setWs(slug);
     writeCookie("wv_workspace", slug);
     // The new workspace has a different roster — show loading + clear the actor;
@@ -89,23 +89,12 @@ export function AppProviders({
     setAct("");
   }, []);
 
-  const ws = getWorkspace(workspace);
-  const accentStyle = {
-    "--primary": ws.accent,
-    "--primary-foreground": ws.accentForeground,
-    "--ring": ws.accent,
-    "--sidebar-primary": ws.accent,
-    "--sidebar-primary-foreground": ws.accentForeground,
-  } as React.CSSProperties;
-
   return (
     <WorkspaceContext.Provider
       value={{ workspace, setWorkspace, actorId, setActorId, users, usersLoading, refreshUsers }}
     >
       <TooltipProvider delayDuration={200}>
-        <div style={accentStyle} className="flex min-h-svh flex-col">
-          {children}
-        </div>
+        <div className="flex min-h-svh flex-col">{children}</div>
         <Toaster position="bottom-right" />
       </TooltipProvider>
     </WorkspaceContext.Provider>

@@ -35,7 +35,7 @@ components/        Client components (one *-client.tsx per surface) + shared UI
 lib/
   server/         Server-only SuprSend access (node SDK + management API)
   wf/             Workflow canvas derivation
-scripts/          Seeding (provision.mjs) + asset push (push-assets.mjs)
+scripts/          Workspace creation (create-workspaces.mjs) + asset push (push-assets.mjs)
 suprsend/         The reference assets — CLI-native files, one folder per workspace
 public/wf-engine.js   Canvas rendering engine
 ```
@@ -44,7 +44,8 @@ public/wf-engine.js   Canvas rendering engine
 
 - **Server/client split.** Pages are thin server wrappers that delegate to `*-client.tsx` components. Components import server modules with `import type` only (erased at build) — secrets never reach the browser.
 - **Two SuprSend surfaces.** The management API (`management-api.suprsend.com`, templates/workflows) uses the account `ServiceToken`. The hub (`hub.suprsend.com`, users/triggers) uses the per-workspace key+secret via the node SDK.
-- **Multi-tenant env keys.** Each workspace's credentials are read from env vars whose prefix is derived from its slug — see [`.env.example`](.env.example).
+- **Workspaces come from the account.** The app lists the workspaces in your SuprSend account and shows each one whose keys are in env, matched on the Workspace Key. Its name and colour come from its brand. Env var prefixes are derived from the slug — see [`.env.example`](.env.example).
+- **No demo data.** Nothing seeds users or brands. You add them in the app.
 
 ---
 
@@ -89,10 +90,10 @@ cp .env.example .env.local
 
 **4. Add your Service Token.** In the dashboard go to **Account Settings → Service Tokens**, create one, and paste it into `.env.local` as `SUPRSEND_SERVICE_TOKEN`. This is the one account-wide credential needed to create workspaces at all — everything below depends on it being set first.
 
-**5. Create the workspaces.** This reads the workspaces declared in `lib/workspaces.ts`, creates any that don't exist in your account (reusing the rest), and appends blank credential lines to `.env.local` for you to fill.
+**5. Create the workspaces.** This creates the two example workspaces in your account (reusing any that exist), and appends blank credential lines to `.env.local` for you to fill.
 
 ```bash
-node --env-file=.env.local scripts/provision.mjs workspaces
+npm run create:workspaces
 ```
 
 > This step must run — and succeed — **before** step 6. A workspace's API Keys page in the dashboard doesn't exist until the workspace itself exists; there is nothing to copy keys from until this command creates (or confirms) the workspace.
@@ -113,20 +114,17 @@ npm run push:assets
 
 Your account is the source of truth from here on: the app renders whatever the workspaces hold, so you can edit or add assets in the SuprSend dashboard freely — and `npx suprsend template pull -w <workspace> -d suprsend/<workspace>/templates` (same for `workflow` / `category`) brings dashboard edits back into these files if you want them versioned.
 
-**8. Seed the demo data.** Branding (the tenant each template's `{{$brand.*}}` resolves through) and the demo subscribers — the data-plane pieces the CLI has no commands for:
-
-```bash
-node --env-file=.env.local scripts/provision.mjs brand
-node --env-file=.env.local scripts/provision.mjs users
-```
-
-**9. Run the dev server.**
+**8. Run the dev server.**
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). The workspace switcher lists every workspace whose keys you pasted. If it shows none, check the keys and restart the dev server.
+
+**9. Set each workspace's brand.** In **Brand Settings**, set the name, colours, logo and website. Templates render `{{$brand.*}}` from it, and the switcher shows its name and colour. Without it, emails are signed with your SuprSend account name, and the welcome's "Browse the menu" button has no link.
+
+**10. Add your first users.** Open **Users**. The first visit creates the `all-subscribers` list. If the page says the welcome is off, open that list in the SuprSend dashboard and turn on **Track user entry** first (see the note below). Then use **Add subscriber** for each person.
 
 **Optional — deploy.** The app deploys like any Next.js app (set the same env vars on the host). Set `DEMO_PASSWORD` so the whole demo sits behind one shared password — and remember a deployed demo talks to your **real** SuprSend account: anyone past the gate is sending real notifications from your workspaces.
 
@@ -158,13 +156,13 @@ base64 -i signing-key.pem | tr -d '\n'
 >
 > **Note — the reference assets.** The kit under `suprsend/<workspace>/` is a starter, not a contract: push it, replace it, or ignore it and build everything in the dashboard — the app reads the account either way. The files themselves were pulled from live workspaces with the CLI, so they are exactly what `pull` produces. Re-running `npm run push:assets` is safe: an unchanged asset commits as a no-op, and a dashboard edit you haven't pulled back is overwritten only for the assets the kit also defines — pull first if you want to keep dashboard edits.
 >
-> **Note — the list-entry welcome.** The hub API silently ignores `track_user_entry` when provisioning creates the `all-subscribers` list, and offers no call to change it afterwards — the flag can only be enabled from the list's page in the dashboard. Do that **before** running `provision.mjs users`: a member who joins while tracking is off never emits `$USER_ENTERED_LIST`, is never welcomed, and won't re-enter on a re-run. The `users` stage checks the flag and warns when it's off.
+> **Note — the list-entry welcome.** The hub API silently ignores `track_user_entry` when the app creates the `all-subscribers` list, and offers no call to change it afterwards, so it can only be turned on from the list's page in the dashboard. Do that **before** adding anyone: a member who joins while tracking is off never emits `$USER_ENTERED_LIST`, is never welcomed, and won't re-enter later. The Users screen checks the flag and warns while it's off.
 >
-> Redeploying the app does **not** re-run any of this. Provisioning and seeding are one-time (or on-demand) commands a developer runs locally; the build/deploy pipeline only runs `next build`.
+> Redeploying the app does **not** re-run any of this. Creating workspaces and pushing assets are one-time (or on-demand) commands a developer runs locally; the build/deploy pipeline only runs `next build`.
 
 ### Configuring additional workspaces
 
-Workspaces are declared in `lib/workspaces.ts`. Add an entry there, re-run the provision command, and fill the new env lines. See [`.env.example`](.env.example) for the full list and naming convention.
+No code change is needed. Create the workspace in the SuprSend dashboard, add its keys to `.env.local` under its slug's prefix, and restart the dev server. It appears in the switcher. See [`.env.example`](.env.example) for the naming convention.
 
 ---
 
@@ -175,9 +173,9 @@ Everything the app does rides on four SuprSend surfaces (all request shapes veri
 - **Templates — management API v2** (`/v2/{ws}/template/…`, account `ServiceToken`): list/get, metadata + per-channel variant writes, and a `PATCH …/commit/` that publishes a draft live. `lib/suprsend-mgmt.ts` is the app's client; the same objects live on disk as the CLI files under `suprsend/<workspace>/templates/`.
 - **Workflows — management API v1** (`/v1/{ws}/workflow/{slug}/?commit=true`): one POST publishes the whole definition. The app's AI-authoring flow publishes a workflow's templates first, then the workflow, so a half-published journey can't go live.
 - **Preference categories — management API v1** (`/v1/{ws}/preference_category/`): reads return the full three-root tree (system / transactional / promotional); writes are a POST of the **full tree** back (PATCH/PUT return 405), which is why the app re-reads live state and merges edits by slug before saving.
-- **Hub — node SDK** (`hub.suprsend.com`, per-workspace key + secret): users, tenants/brand, lists, triggers, broadcasts, and per-subscriber preferences. This is the data plane — the CLI has no commands for it, which is exactly the split between `npm run push:assets` (assets, CLI) and `scripts/provision.mjs` (data, SDK/API).
+- **Hub — node SDK** (`hub.suprsend.com`, per-workspace key + secret): users, tenants/brand, lists, triggers, broadcasts, and per-subscriber preferences. This is the data plane — the CLI has no commands for it, so users, brands and lists are created in the app rather than pushed from files.
 
-Gotchas that cost real debugging time are documented where they bite, as comments in `lib/server/*` and the scripts — e.g. the workspace-level flag without which subscriber preferences silently omit the inbox channel (`scripts/push-assets.mjs`), and the `track_user_entry` flag the hub API accepts but ignores (`scripts/provision.mjs`).
+Gotchas that cost real debugging time are documented where they bite, as comments in `lib/server/*` and the scripts — e.g. the workspace-level flag without which subscriber preferences silently omit the inbox channel (`scripts/push-assets.mjs`), and the `track_user_entry` flag the hub API accepts but ignores (`lib/server/users.ts`).
 
 ---
 
@@ -191,11 +189,9 @@ Gotchas that cost real debugging time are documented where they bite, as comment
 | `npm run lint` | Lint with ESLint |
 | `npm run typecheck` | Type-check with `tsc --noEmit` |
 | `npm test` | Run the unit tests (Vitest) |
-| `node --env-file=.env.local scripts/provision.mjs workspaces` | Create/reuse workspaces and scaffold their env lines |
+| `npm run create:workspaces` | Create/reuse the example workspaces and scaffold their env lines |
 | `npm run push:assets` | Publish the reference assets (`suprsend/<workspace>/`) with the SuprSend CLI — categories → templates → workflows, committed live. Add `-- --dry-run` to preview |
-| `node --env-file=.env.local scripts/provision.mjs brand` | Set each workspace's tenant brand (`scripts/seed-data/brands.json`) — templates render `{{$brand.*}}` through it |
-| `node --env-file=.env.local scripts/provision.mjs users` | Seed the demo subscribers (`scripts/seed-data/users.json`) and fire onboarding for each newly created one |
-| `npm run seed` | provision.mjs workspaces + brand + users, in order |
+| `node --env-file=.env.local scripts/fire-test.mjs <workspace> <workflow> <distinct_id>` | Fire one workflow at a user, using its templates' sample data |
 
 ---
 

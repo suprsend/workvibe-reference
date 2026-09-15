@@ -11,7 +11,7 @@
     "expires_on": "September 7",
     "promo_code": "WEEKEND22"
   },
-  "recipient_distinct_id": "u_60119",
+  "recipient_distinct_id": null,
   "recipient_object": null,
   "recipient_sub_type": "user",
   "tenant_id": "default"

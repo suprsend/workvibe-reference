@@ -11,7 +11,7 @@
     "payment_method": "Visa ••4471",
     "receipt_url": "https://example.com/receipt/4712"
   },
-  "recipient_distinct_id": "u_30214",
+  "recipient_distinct_id": null,
   "recipient_object": null,
   "recipient_sub_type": "user",
   "tenant_id": "default"
