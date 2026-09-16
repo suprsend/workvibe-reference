@@ -150,8 +150,9 @@ categories, and logs. With no data, screens show an empty state.
 
 - **Preference categories:** writes are a POST of the **full tree** (PATCH/PUT return 405), so the app re-reads
   live state and merges edits by slug before saving.
-- **Workflows:** the app publishes a workflow's templates first, then the workflow, so a half-published journey
-  can't go live.
+- **Workflows:** `POST /api/workflows` publishes a workflow's templates first, then the workflow, so a
+  half-published journey can't go live. No screen calls it — it's there for your own code. Same for
+  `POST /api/templates`.
 - Gotchas are documented where they bite: the inbox preference flag (`scripts/push-assets.mjs`) and the
   ignored `track_user_entry` flag (`lib/server/users.ts`).
 
